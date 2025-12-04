@@ -87,9 +87,8 @@ class OnBoarding1Screen extends StatelessWidget {
 
                   const SizedBox(height: 60),
 
-                  // Title
                   const Text(
-                    "Let's Find Your Sweet",
+                    "Best Deals and offers",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -99,7 +98,7 @@ class OnBoarding1Screen extends StatelessWidget {
                   ),
 
                   const Text(
-                    '& Dream Place',
+                    'Find the best deals and offers for your stay at affordable prices',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -111,7 +110,7 @@ class OnBoarding1Screen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   const Text(
-                    'Get the opportunity to stay that you dream of at an affordable price',
+                    'Discover exclusive discounts and special offers on hotels worldwide. Book now and save big on your next adventure!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,

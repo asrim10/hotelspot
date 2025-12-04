@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
 
 class OnBoarding2Screen extends StatelessWidget {
   const OnBoarding2Screen({super.key});
@@ -23,32 +22,83 @@ class OnBoarding2Screen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 children: [
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 40),
 
-                  SizedBox(
-                    width: 200,
-                    height: 200,
-                    child: Image.asset(
-                      'assets/images/hotel1.jpeg',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          Icons.card_giftcard,
-                          size: 100,
-                          color: Colors.white70,
-                        ),
+                  Center(
+                    child: SizedBox(
+                      width: 280,
+                      height: 280,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Positioned(
+                            top: 0,
+                            child: _buildImageContainer(
+                              'assets/images/hotel1.jpeg',
+                              size: 100,
+                            ),
+                          ),
+
+                          Positioned(
+                            left: 0,
+                            child: _buildImageContainer(
+                              'assets/images/hotel2.jpeg',
+                              size: 100,
+                            ),
+                          ),
+
+                          Positioned(
+                            right: 0,
+                            child: _buildImageContainer(
+                              'assets/images/hotel3.jpeg',
+                              size: 100,
+                            ),
+                          ),
+
+                          Positioned(
+                            child: _buildImageContainer(
+                              'assets/images/hotel4.jpeg',
+                              size: 120,
+                            ),
+                          ),
+
+                          Positioned(
+                            bottom: 0,
+                            left: 20,
+                            child: _buildImageContainer(
+                              'assets/images/hotel5.jpeg',
+                              size: 100,
+                            ),
+                          ),
+
+                          Positioned(
+                            bottom: 0,
+                            right: 20,
+                            child: _buildImageContainer(
+                              'assets/images/hotel6.jpeg',
+                              size: 100,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 60),
+
+                  // Title
+                  const Text(
+                    "Let's Find Your Sweet",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
 
                   const Text(
-                    'Best Deals & Offers',
+                    '& Dream Place',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -60,7 +110,7 @@ class OnBoarding2Screen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   const Text(
-                    'Get exclusive deals and discounts on your favorite hotels and resorts worldwide',
+                    'Get the opportunity to stay that you dream of at an affordable price',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
@@ -69,18 +119,18 @@ class OnBoarding2Screen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 48),
 
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                        );
+                        // Navigator.of(context).push(
+                        //   MaterialPageRoute(
+                        //     builder: (context) => const (),
+                        //   ),
+                        // );
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white, width: 2),
@@ -89,7 +139,7 @@ class OnBoarding2Screen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        'Next',
+                        "Next",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -98,25 +148,44 @@ class OnBoarding2Screen extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Skip',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                  ),
-
                   const SizedBox(height: 40),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageContainer(String imagePath, {required double size}) {
+    return Transform.rotate(
+      angle: 0.3, // diamond effect
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white30, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: Colors.grey[400],
+              child: const Icon(
+                Icons.image_not_supported,
+                color: Colors.grey,
+                size: 30,
               ),
             ),
           ),
