@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:hotelspot/screens/home_screen.dart';
 import 'package:hotelspot/screens/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -161,7 +162,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 50,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const HomeScreen(),
+                          ),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white, width: 2),
                         shape: RoundedRectangleBorder(
