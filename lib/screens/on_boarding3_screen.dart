@@ -139,7 +139,7 @@ class OnBoarding3Screen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        "Next",
+                        "Let's Go",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
