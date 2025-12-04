@@ -133,7 +133,7 @@ class OnBoarding1Screen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        "Let's Go",
+                        "Next",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -142,7 +142,6 @@ class OnBoarding1Screen extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 40),
                 ],
               ),
