@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hotelspot/screens/on_boarding2_screen.dart';
 
 class OnBoarding1Screen extends StatelessWidget {
   const OnBoarding1Screen({super.key});
@@ -125,7 +126,13 @@ class OnBoarding1Screen extends StatelessWidget {
                     width: double.infinity,
                     height: 50,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const OnBoarding2Screen(),
+                          ),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white, width: 2),
                         shape: RoundedRectangleBorder(
