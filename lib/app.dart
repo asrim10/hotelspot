@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hotelspot/screens/login_screen.dart';
+import 'package:hotelspot/screens/register_screen.dart';
 
 class Myapp extends StatelessWidget {
   const Myapp({super.key});
@@ -13,7 +13,7 @@ class Myapp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LoginScreen(),
+      home: const RegisterScreen(),
     );
   }
 }
