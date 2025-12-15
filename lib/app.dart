@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hotelspot/screens/home_screen.dart';
-import 'package:hotelspot/screens/splash_screen.dart';
+import 'package:hotelspot/theme_data/theme_data.dart';
 
 class Myapp extends StatelessWidget {
   const Myapp({super.key});
@@ -10,10 +10,9 @@ class Myapp extends StatelessWidget {
     return MaterialApp(
       title: 'Hotelspot',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme(),
+      darkTheme: AppTheme.darkTheme(),
+      themeMode: ThemeMode.system,
       home: const HomeScreen(),
     );
   }
