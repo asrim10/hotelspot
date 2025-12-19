@@ -163,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 50,
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.of(context).push(
+                        Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
                             builder: (context) => const HomeScreen(),
                           ),

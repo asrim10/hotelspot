@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hotelspot/screens/home_screen.dart';
+import 'package:hotelspot/screens/splash_screen.dart';
 import 'package:hotelspot/theme_data/theme_data.dart';
 
 class Myapp extends StatelessWidget {
@@ -13,7 +13,7 @@ class Myapp extends StatelessWidget {
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),
       themeMode: ThemeMode.system,
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }
