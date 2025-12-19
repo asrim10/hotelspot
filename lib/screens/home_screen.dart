@@ -173,7 +173,6 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
 
-                      // Categories horizontal list (3 icons) — now scrollable to avoid overflow
                       SizedBox(
                         height: 100,
                         child: SingleChildScrollView(
@@ -190,6 +189,44 @@ class HomeScreen extends StatelessWidget {
                             ],
                           ),
                         ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Top Hotels',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Best picks for your stay',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Text(
+                            'See all',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 12),
