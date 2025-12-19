@@ -8,7 +8,6 @@ class AppTheme {
   static ThemeData lightTheme() {
     final base = ThemeData.light();
     return base.copyWith(
-      useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
         brightness: Brightness.light,
@@ -41,7 +40,6 @@ class AppTheme {
           ),
         ),
       ),
-      // cardTheme intentionally omitted to avoid SDK specific type mismatch
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
         selectedItemColor: primary,
@@ -63,7 +61,6 @@ class AppTheme {
   static ThemeData darkTheme() {
     final base = ThemeData.dark();
     return base.copyWith(
-      useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
         brightness: Brightness.dark,
@@ -96,7 +93,6 @@ class AppTheme {
           ),
         ),
       ),
-      // cardTheme intentionally omitted to avoid SDK specific type mismatch
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Color(0xFF0B1220),
         selectedItemColor: accent,
