@@ -37,16 +37,35 @@ class HomeScreen extends StatelessWidget {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       child: Row(
-                        children: const [
-                          Icon(Icons.search, color: Colors.black54),
-                          SizedBox(width: 8),
+                        children: [
+                          const Icon(Icons.search, color: Colors.black54),
+                          const SizedBox(width: 8),
                           Expanded(
-                            child: Text(
-                              "Search Hotels...",
-                              style: TextStyle(
-                                color: Colors.black54,
+                            child: TextField(
+                              decoration: const InputDecoration.collapsed(
+                                hintText: 'Search Hotels...',
+                                hintStyle: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              style: const TextStyle(
+                                color: Colors.black87,
                                 fontSize: 14,
                               ),
+                              cursorColor: topLeft,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 34,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                Icons.filter_list,
+                                color: Colors.black54,
+                              ),
+                              onPressed: () {},
+                              splashRadius: 18,
                             ),
                           ),
                         ],
