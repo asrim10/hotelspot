@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'on_boarding1_screen.dart';
+import 'package:hotelspot/screens/home_screen.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -9,9 +9,9 @@ class SplashScreen extends StatelessWidget {
     return Scaffold(
       body: GestureDetector(
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const OnBoarding1Screen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (context) => const HomeScreen()));
         },
         child: Container(
           width: double.infinity,
