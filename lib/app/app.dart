@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/features/splash/presentation/pages/splash_screen.dart';
 import 'package:hotelspot/theme_data/theme_data.dart';
 
-class Myapp extends StatelessWidget {
+class Myapp extends ConsumerWidget {
   const Myapp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Hotelspot',
       debugShowCheckedModeBanner: false,
