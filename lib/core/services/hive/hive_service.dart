@@ -1,7 +1,12 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:hotelspot/core/constants/hive_table_constant.dart';
 import 'package:hotelspot/features/auth/data/models/auth_hive_model.dart';
 import 'package:path_provider/path_provider.dart';
+
+final hiveServiceProvider = Provider<HiveService>((ref) {
+  return HiveService();
+});
 
 class HiveService {
   Future<void> init() async {
