@@ -34,12 +34,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
-      ref
+      await ref
           .read(authViewModelProvider.notifier)
           .register(
             fullName: _nameController.text,
             email: _emailController.text,
-            username: _nameController.text.trim().split(' ').first,
+            username: _emailController.text.trim().split('@').first,
             password: _passwordController.text,
           );
     }
@@ -48,6 +48,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
+
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.error) {
         SnackbarUtils.showError(
@@ -55,9 +56,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           next.errorMessage ?? "Registration Failed",
         );
       } else if (next.status == AuthStatus.registered) {
-        SnackbarUtils.showSuccess(
-          context,
-          next.errorMessage ?? "Registration Success",
+        SnackbarUtils.showSuccess(context, "Registration Successful");
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       }
     });
@@ -75,10 +77,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Form(
-                key: _formKey, // Added Form key
+            child: Form(
+              key: _formKey,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
                   children: [
                     const SizedBox(height: 24),
