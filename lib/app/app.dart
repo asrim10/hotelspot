@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hotelspot/screens/splash_screen.dart';
+import 'package:hotelspot/features/splash/presentation/pages/splash_screen.dart';
 import 'package:hotelspot/theme_data/theme_data.dart';
 
 class Myapp extends StatelessWidget {

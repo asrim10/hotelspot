@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:hotelspot/screens/on_boarding1_screen.dart';
+import 'package:hotelspot/features/onboarding/presentation/pages/on_boarding1_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

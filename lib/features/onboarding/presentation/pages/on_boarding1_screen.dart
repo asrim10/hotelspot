@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hotelspot/screens/on_boarding2_screen.dart';
+import 'package:hotelspot/features/onboarding/presentation/pages/on_boarding2_screen.dart';
 
 class OnBoarding1Screen extends StatelessWidget {
   const OnBoarding1Screen({super.key});

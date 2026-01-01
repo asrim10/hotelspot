@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hotelspot/screens/on_boarding3_screen.dart';
+import 'package:hotelspot/features/auth/presentation/pages/login_screen.dart';
 
-class OnBoarding2Screen extends StatelessWidget {
-  const OnBoarding2Screen({super.key});
+class OnBoarding3Screen extends StatelessWidget {
+  const OnBoarding3Screen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +88,7 @@ class OnBoarding2Screen extends StatelessWidget {
                   const SizedBox(height: 60),
 
                   const Text(
-                    "Best Deals and offers",
+                    "Discover Your Perfect Stay",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -98,7 +98,7 @@ class OnBoarding2Screen extends StatelessWidget {
                   ),
 
                   const Text(
-                    'Find the best deals and offers for your stay at affordable prices',
+                    'With HotelSpot',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -110,7 +110,7 @@ class OnBoarding2Screen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   const Text(
-                    'Discover exclusive discounts and special offers on hotels worldwide. Book now and save big on your next adventure!',
+                    'Find and book the best hotels effortlessly—affordable, comfortable, and perfectly matched to your needs.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
@@ -128,7 +128,7 @@ class OnBoarding2Screen extends StatelessWidget {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => const OnBoarding3Screen(),
+                            builder: (context) => const LoginScreen(),
                           ),
                         );
                       },
@@ -139,7 +139,7 @@ class OnBoarding2Screen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        "Next",
+                        "Let's Go",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
