@@ -15,8 +15,6 @@ class AuthHiveModel extends HiveObject {
   final String email;
   @HiveField(3)
   final String? phoneNumber;
-  @HiveField(4)
-  final String? batchId;
   @HiveField(5)
   final String username;
   @HiveField(6)
@@ -29,7 +27,6 @@ class AuthHiveModel extends HiveObject {
     required this.fullName,
     required this.email,
     this.phoneNumber,
-    this.batchId,
     required this.username,
     this.password,
     this.profilePicture,
@@ -42,7 +39,6 @@ class AuthHiveModel extends HiveObject {
       fullName: entity.fullName,
       email: entity.email,
       phoneNumber: entity.phoneNumber,
-      batchId: entity.batchId,
       username: entity.username,
       password: entity.password,
       profilePicture: entity.profilePicture,
@@ -56,7 +52,6 @@ class AuthHiveModel extends HiveObject {
       fullName: fullName,
       email: email,
       phoneNumber: phoneNumber,
-      batchId: batchId,
       username: username,
       password: password,
       profilePicture: profilePicture,
