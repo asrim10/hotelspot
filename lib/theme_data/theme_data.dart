@@ -30,6 +30,19 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
+        errorStyle: const TextStyle(
+          color: Color(0xFFFFA726), // visible on light background
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFFFA726), width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFFFA726), width: 1.5),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -82,6 +95,19 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
+        ),
+        errorStyle: const TextStyle(
+          color: Color(0xFFFFD54F), // visible on dark background
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFFFD54F), width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFFFD54F), width: 1.5),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
