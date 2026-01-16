@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hotelspot/features/auth/presentation/pages/login_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -136,10 +138,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              // Handle logout logic here
-              Navigator.of(context).pop();
+            onPressed: () async {
+              // Clear auth token
+              const storage = FlutterSecureStorage();
+              await storage.delete(key: 'auth_token');
+
               // Navigate to login screen
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
             },
             child: const Text('Logout', style: TextStyle(color: Colors.red)),
           ),
