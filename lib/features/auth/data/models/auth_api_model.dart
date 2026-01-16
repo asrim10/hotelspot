@@ -51,6 +51,7 @@ class AuthApiModel {
       fullName: entity.fullName,
       email: entity.email,
       username: entity.username,
+      password: entity.password,
     );
   }
 
