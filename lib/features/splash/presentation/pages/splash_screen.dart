@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:hotelspot/features/onboarding/presentation/pages/on_boarding1_screen.dart';
+import 'package:hotelspot/features/onboarding/presentation/pages/on_boarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
     _timer = Timer(const Duration(seconds: 2), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const OnBoarding1Screen()),
+          MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
         );
       }
     });
@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
         onTap: () {
           _timer?.cancel();
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const OnBoarding1Screen()),
+            MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
           );
         },
         child: Container(
