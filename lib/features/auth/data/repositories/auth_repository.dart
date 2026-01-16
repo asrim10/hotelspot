@@ -54,15 +54,37 @@ class AuthRepository implements IAuthRepository {
     String email,
     String password,
   ) async {
-    try {
-      final user = await _authLocalDatasource.login(email, password);
-      if (user != null) {
-        final entity = user.toEntity();
-        return Right(entity);
+    if (await _networkInfo.isConnected) {
+      try {
+        final apiModel = await _authRemoteDataSource.login(email, password);
+        if (apiModel != null) {
+          final entity = apiModel.toEntity();
+          return Right(entity);
+        }
+        return const Left(ApiFailure(message: "Invalid Credentials"));
+      } on DioException catch (e) {
+        return Left(
+          ApiFailure(
+            message: e.response?.data["message"] ?? "Login failed",
+            statusCode: e.response?.statusCode,
+          ),
+        );
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
       }
-      return (Left(LocalDatabaseFailure(message: 'Invalid email or password')));
-    } catch (e) {
-      return (Left(LocalDatabaseFailure(message: e.toString())));
+    } else {
+      try {
+        final user = await _authLocalDatasource.login(email, password);
+        if (user != null) {
+          final entity = user.toEntity();
+          return Right(entity);
+        }
+        return (Left(
+          LocalDatabaseFailure(message: 'Invalid email or password'),
+        ));
+      } catch (e) {
+        return (Left(LocalDatabaseFailure(message: e.toString())));
+      }
     }
   }
 
