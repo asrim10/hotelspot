@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hotelspot/core/services/storage/user_session_service.dart';
 import 'package:hotelspot/features/auth/presentation/pages/login_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -13,6 +14,12 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    final userSessionService = ref.read(userSessionServiceProvider);
+    final userEmail =
+        userSessionService.getCurrentUserEmail() ?? 'user@example.com';
+    final userUsername =
+        userSessionService.getCurrentUserUsername() ?? 'username';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
@@ -38,7 +45,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 16),
             // User Name
             Text(
-              'John Doe', // Replace with actual user name
+              userUsername,
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -46,7 +53,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 8),
             // User Email
             Text(
-              'john.doe@example.com', // Replace with actual user email
+              userEmail,
               style: Theme.of(
                 context,
               ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
