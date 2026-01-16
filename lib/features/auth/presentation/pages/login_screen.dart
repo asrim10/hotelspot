@@ -5,7 +5,6 @@ import 'package:hotelspot/core/utils/snackbar_utils.dart';
 import 'package:hotelspot/features/auth/presentation/pages/register_screen.dart';
 import 'package:hotelspot/features/auth/presentation/state/auth_state.dart';
 import 'package:hotelspot/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:hotelspot/features/home/presentation/pages/home_screen.dart';
 import 'package:hotelspot/screens/main_bottom_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
