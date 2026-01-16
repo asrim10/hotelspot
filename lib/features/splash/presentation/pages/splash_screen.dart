@@ -1,23 +1,34 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hotelspot/core/services/storage/user_session_service.dart';
+import 'package:hotelspot/features/home/presentation/pages/home_screen.dart';
 import 'package:hotelspot/features/onboarding/presentation/pages/on_boarding_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _timer = Timer(const Duration(seconds: 2), () {
-      if (mounted) {
+      if (mounted) return;
+      final userSessionService = ref.read(userSessionServiceProvider);
+      final isLoggedIn = userSessionService.isLoggedIn();
+
+      if (isLoggedIn) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
         );
