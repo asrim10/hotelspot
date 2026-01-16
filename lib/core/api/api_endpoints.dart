@@ -12,8 +12,8 @@ class ApiEndpoints {
   static const Duration receiveTimeout = Duration(seconds: 30);
 
   // Auth endpoints
-  static const String register = '/register';
-  static const String login = '/login';
-  static const String updateUser = '/users';
-  static const String deleteUser = '/users';
+  static const String register = '/auth/register';
+  static const String login = '/auth/login';
+  static const String updateUser = '/auth/users';
+  static const String deleteUser = '/auth/users';
 }

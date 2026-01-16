@@ -41,6 +41,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: _emailController.text,
             username: _emailController.text.trim().split('@').first,
             password: _passwordController.text,
+            confirmPassword: _confirmPasswordController.text,
           );
     }
   }

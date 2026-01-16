@@ -6,6 +6,7 @@ class AuthApiModel {
   final String email;
   final String username;
   final String? password;
+  final String? confirmPassword;
 
   AuthApiModel({
     this.id,
@@ -13,6 +14,7 @@ class AuthApiModel {
     required this.email,
     required this.username,
     this.password,
+    this.confirmPassword,
   });
 
   // to JSON
@@ -22,6 +24,7 @@ class AuthApiModel {
       "email": email,
       "username": username,
       "password": password,
+      "confirmPassword": confirmPassword,
     };
   }
 
@@ -52,6 +55,7 @@ class AuthApiModel {
       email: entity.email,
       username: entity.username,
       password: entity.password,
+      confirmPassword: entity.confirmPassword,
     );
   }
 
