@@ -2,19 +2,24 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 
 class BottomNavigationWidget extends StatefulWidget {
-  const BottomNavigationWidget({super.key});
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const BottomNavigationWidget({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   @override
   State<BottomNavigationWidget> createState() => _BottomNavigationWidgetState();
 }
 
 class _BottomNavigationWidgetState extends State<BottomNavigationWidget> {
-  int _currentIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     return CurvedNavigationBar(
-      index: _currentIndex,
+      index: widget.currentIndex,
       backgroundColor: Colors.transparent,
       color: Theme.of(context).primaryColor,
       buttonBackgroundColor: Theme.of(context).primaryColor,
@@ -25,11 +30,7 @@ class _BottomNavigationWidgetState extends State<BottomNavigationWidget> {
         Icon(Icons.location_on, size: 28, color: Colors.white),
         Icon(Icons.person, size: 28, color: Colors.white),
       ],
-      onTap: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
+      onTap: widget.onTap,
     );
   }
 }

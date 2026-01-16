@@ -6,6 +6,7 @@ import 'package:hotelspot/features/auth/presentation/pages/register_screen.dart'
 import 'package:hotelspot/features/auth/presentation/state/auth_state.dart';
 import 'package:hotelspot/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:hotelspot/features/home/presentation/pages/home_screen.dart';
+import 'package:hotelspot/screens/main_bottom_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -46,7 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const MainBottomScreen()),
         );
       } else if (next.status == AuthStatus.error && next.errorMessage != null) {
         SnackbarUtils.showError(context, next.errorMessage!);

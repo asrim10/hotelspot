@@ -267,38 +267,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: topLeft,
-        unselectedItemColor: Colors.black54,
-        type: BottomNavigationBarType.fixed,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, size: 22),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border, size: 22),
-            label: 'Fav',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.location_on, size: 22),
-            label: 'Map',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline, size: 22),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline, size: 22),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: 0,
-      ),
     );
   }
 
