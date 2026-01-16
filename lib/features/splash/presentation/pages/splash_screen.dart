@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/services/storage/user_session_service.dart';
-import 'package:hotelspot/features/home/presentation/pages/home_screen.dart';
 import 'package:hotelspot/features/onboarding/presentation/pages/on_boarding_screen.dart';
+import 'package:hotelspot/screens/main_bottom_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -26,7 +26,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
       if (isLoggedIn) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => const MainBottomScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(
@@ -48,9 +48,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       body: GestureDetector(
         onTap: () {
           _timer?.cancel();
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
-          );
+          final userSessionService = ref.read(userSessionServiceProvider);
+          final isLoggedIn = userSessionService.isLoggedIn();
+
+          if (isLoggedIn) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const MainBottomScreen()),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
+            );
+          }
         },
         child: Container(
           width: double.infinity,
