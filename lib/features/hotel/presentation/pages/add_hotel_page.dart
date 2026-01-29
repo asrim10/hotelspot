@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hotelspot/core/utils/snackbar_utils.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class AddHotelPage extends StatefulWidget {
   const AddHotelPage({super.key});
@@ -20,7 +24,94 @@ class _AddHotelPageState extends State<AddHotelPage> {
 
   double _rating = 0.0;
   bool _isLoading = false;
-  List<String> _selectedImages = [];
+
+  final List<XFile> _selectedMedia = [];
+  final ImagePicker _imagePicker = ImagePicker();
+
+  Future<bool> _userPermission(Permission permission) async {
+    final status = await permission.status;
+    if (status.isGranted) {
+      return true;
+    }
+
+    if (status.isDenied) {
+      final result = await permission.request();
+      return result.isGranted;
+    }
+    if (status.isPermanentlyDenied) {
+      _showPermissionDeniedDialog();
+      return false;
+    }
+    return false;
+  }
+
+  //code for camera
+  Future<void> _cameraPicture() async {
+    final hasPermission = await _userPermission(Permission.camera);
+    if (!hasPermission) return;
+
+    final XFile? photo = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+    );
+
+    if (photo != null) {
+      setState(() {
+        _selectedMedia.clear();
+        _selectedMedia.add(photo);
+      });
+    }
+  }
+
+  //code for gallery
+  Future<void> _pickFromGallery({bool allowMultiple = false}) async {
+    try {
+      if (allowMultiple) {
+        final List<XFile> images = await _imagePicker.pickMultiImage(
+          imageQuality: 80,
+        );
+        if (images.isNotEmpty) {
+          _selectedMedia.clear();
+          _selectedMedia.addAll(images);
+        }
+      } else {
+        final XFile? image = await _imagePicker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 80,
+        );
+        if (image != null) {
+          setState(() {
+            _selectedMedia.clear();
+            _selectedMedia.add(image);
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Gallery Error $e");
+      if (mounted) {
+        SnackbarUtils.showError(
+          context,
+          "Could not access your gallery, Please click image with camera",
+        );
+      }
+    }
+  }
+
+  //code for video
+
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Give Permission'),
+        content: Text("Go to settings to use this feature"),
+        actions: [
+          TextButton(onPressed: () {}, child: Text('Cancel')),
+          TextButton(onPressed: () {}, child: Text('Open Settings')),
+        ],
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -52,7 +143,7 @@ class _AddHotelPageState extends State<AddHotelPage> {
             : null,
         'price': double.parse(_priceController.text),
         'availableRooms': int.parse(_availableRoomsController.text),
-        'images': _selectedImages,
+        'images': _selectedMedia.map((e) => e.path).toList(),
       };
 
       // Simulate API call
@@ -139,7 +230,9 @@ class _AddHotelPageState extends State<AddHotelPage> {
                         children: [
                           // Add Image Button
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () {
+                              _cameraPicture();
+                            },
                             child: Container(
                               width: 120,
                               margin: const EdgeInsets.only(right: 12),
@@ -172,9 +265,9 @@ class _AddHotelPageState extends State<AddHotelPage> {
                             ),
                           ),
                           // Selected Images
-                          ..._selectedImages.asMap().entries.map((entry) {
+                          ..._selectedMedia.asMap().entries.map((entry) {
                             int index = entry.key;
-                            String imageUrl = entry.value;
+                            XFile imageFile = entry.value;
                             return Container(
                               width: 120,
                               margin: const EdgeInsets.only(right: 12),
@@ -182,8 +275,8 @@ class _AddHotelPageState extends State<AddHotelPage> {
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      imageUrl,
+                                    child: Image.file(
+                                      File(imageFile.path),
                                       width: 120,
                                       height: 120,
                                       fit: BoxFit.cover,
@@ -193,7 +286,11 @@ class _AddHotelPageState extends State<AddHotelPage> {
                                     top: 4,
                                     right: 4,
                                     child: GestureDetector(
-                                      onTap: () => (index),
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedMedia.removeAt(index);
+                                        });
+                                      },
                                       child: Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: const BoxDecoration(
