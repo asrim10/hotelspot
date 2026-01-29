@@ -100,7 +100,27 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
 
   //code for video
   Future<void> _pickVideo() async {
-    return Future.value(true);
+    try {
+      final hasPermission = await _userPermission(Permission.camera);
+      if (!hasPermission) return;
+
+      final hasMicPermission = await _userPermission(Permission.microphone);
+      if (!hasMicPermission) return;
+
+      final XFile? video = await _imagePicker.pickVideo(
+        source: ImageSource.camera,
+        maxDuration: const Duration(minutes: 1),
+      );
+
+      if (video != null) {
+        setState(() {
+          _selectedMedia.clear();
+          _selectedMedia.add(video);
+        });
+      }
+    } catch (e) {
+      _showPermissionDeniedDialog();
+    }
   }
 
   //code for dialogBox: showDialog for menu
