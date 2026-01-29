@@ -20,7 +20,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
     _timer = Timer(const Duration(seconds: 2), () {
-      if (mounted) return;
+      if (!mounted) return;
       final userSessionService = ref.read(userSessionServiceProvider);
       final isLoggedIn = userSessionService.isLoggedIn();
 
