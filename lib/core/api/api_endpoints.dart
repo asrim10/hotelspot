@@ -33,4 +33,18 @@ class ApiEndpoints {
   static const String login = '/auth/login';
   static const String updateUser = '/auth/users';
   static const String deleteUser = '/auth/users';
+
+  //hotel endpoints
+
+  // Hotel endpoints
+  static const String hotels = '/hotels';
+  static String hotelById(String id) => '/hotels/$id';
+  static String searchHotels(String searchTerm) => '/hotels/search/$searchTerm';
+  static String availableHotels({int? minRooms}) =>
+      minRooms != null ? '/hotels/available/$minRooms' : '/hotels/available';
+  static String createHotel() => '/hotels';
+  static String updateHotel(String id) => '/hotels/$id';
+  static String updateHotelImage(String id) => '/hotels/$id/image';
+  static String updateAvailableRooms(String id) => '/hotels/$id/rooms';
+  static String deleteHotel(String id) => '/hotels/$id';
 }
