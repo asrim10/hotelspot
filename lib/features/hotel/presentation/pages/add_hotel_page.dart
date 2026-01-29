@@ -120,16 +120,26 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
               ListTile(
                 leading: Icon(Icons.camera),
                 title: Text("Open Camera"),
-                onTap: _cameraPicture,
+                onTap: () {
+                  Navigator.pop(context);
+                  _cameraPicture();
+                },
               ),
               ListTile(
                 leading: Icon(Icons.image),
                 title: Text("Open Gallery"),
-                onTap: _pickFromGallery,
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickFromGallery();
+                },
               ),
               ListTile(
                 leading: Icon(Icons.video_chat),
                 title: Text("Capture Video"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickVideo();
+                },
               ),
             ],
           ),
