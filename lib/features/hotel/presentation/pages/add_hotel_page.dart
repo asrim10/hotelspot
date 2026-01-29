@@ -1,18 +1,19 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/utils/snackbar_utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class AddHotelPage extends StatefulWidget {
+class AddHotelPage extends ConsumerStatefulWidget {
   const AddHotelPage({super.key});
 
   @override
-  State<AddHotelPage> createState() => _AddHotelPageState();
+  ConsumerState<AddHotelPage> createState() => _AddHotelPageState();
 }
 
-class _AddHotelPageState extends State<AddHotelPage> {
+class _AddHotelPageState extends ConsumerState<AddHotelPage> {
   final _formKey = GlobalKey<FormState>();
   final _hotelNameController = TextEditingController();
   final _addressController = TextEditingController();
@@ -98,6 +99,44 @@ class _AddHotelPageState extends State<AddHotelPage> {
   }
 
   //code for video
+  Future<void> _pickVideo() async {
+    return Future.value(true);
+  }
+
+  //code for dialogBox: showDialog for menu
+  Future<void> _pickMedia() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera),
+                title: Text("Open Camera"),
+                onTap: _cameraPicture,
+              ),
+              ListTile(
+                leading: Icon(Icons.image),
+                title: Text("Open Gallery"),
+                onTap: _pickFromGallery,
+              ),
+              ListTile(
+                leading: Icon(Icons.video_chat),
+                title: Text("Capture Video"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   void _showPermissionDeniedDialog() {
     showDialog(
@@ -231,7 +270,7 @@ class _AddHotelPageState extends State<AddHotelPage> {
                           // Add Image Button
                           GestureDetector(
                             onTap: () {
-                              _cameraPicture();
+                              _pickMedia();
                             },
                             child: Container(
                               width: 120,
@@ -265,50 +304,69 @@ class _AddHotelPageState extends State<AddHotelPage> {
                             ),
                           ),
                           // Selected Images
-                          ..._selectedMedia.asMap().entries.map((entry) {
-                            int index = entry.key;
-                            XFile imageFile = entry.value;
-                            return Container(
-                              width: 120,
-                              margin: const EdgeInsets.only(right: 12),
-                              child: Stack(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.file(
-                                      File(imageFile.path),
-                                      width: 120,
-                                      height: 120,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 4,
-                                    right: 4,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _selectedMedia.removeAt(index);
-                                        });
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
+                          const SizedBox(height: 24),
+                          if (_selectedMedia.isNotEmpty) ...[
+                            Stack(
+                              children: [
+                                Container(
+                                  width: 200,
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    image: DecorationImage(
+                                      image: FileImage(
+                                        File(_selectedMedia[0].path),
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                                ),
+                              ],
+                            ),
+                          ],
+                          // ..._selectedMedia.asMap().entries.map((entry) {
+                          //   int index = entry.key;
+                          //   XFile imageFile = entry.value;
+                          //   return Container(
+                          //     width: 120,
+                          //     margin: const EdgeInsets.only(right: 12),
+                          //     child: Stack(
+                          //       children: [
+                          //         ClipRRect(
+                          //           borderRadius: BorderRadius.circular(12),
+                          //           child: Image.file(
+                          //             File(imageFile.path),
+                          //             width: 120,
+                          //             height: 120,
+                          //             fit: BoxFit.cover,
+                          //           ),
+                          //         ),
+                          //         Positioned(
+                          //           top: 4,
+                          //           right: 4,
+                          //           child: GestureDetector(
+                          //             onTap: () {
+                          //               setState(() {
+                          //                 _selectedMedia.removeAt(index);
+                          //               });
+                          //             },
+                          //             child: Container(
+                          //               padding: const EdgeInsets.all(4),
+                          //               decoration: const BoxDecoration(
+                          //                 color: Colors.red,
+                          //                 shape: BoxShape.circle,
+                          //               ),
+                          //               child: const Icon(
+                          //                 Icons.close,
+                          //                 color: Colors.white,
+                          //                 size: 16,
+                          //               ),
+                          //             ),
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   );
+                          // }),
                         ],
                       ),
                     ),
