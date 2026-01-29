@@ -330,53 +330,32 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                     ),
                                   ),
                                 ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedMedia.clear();
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ],
-                          // ..._selectedMedia.asMap().entries.map((entry) {
-                          //   int index = entry.key;
-                          //   XFile imageFile = entry.value;
-                          //   return Container(
-                          //     width: 120,
-                          //     margin: const EdgeInsets.only(right: 12),
-                          //     child: Stack(
-                          //       children: [
-                          //         ClipRRect(
-                          //           borderRadius: BorderRadius.circular(12),
-                          //           child: Image.file(
-                          //             File(imageFile.path),
-                          //             width: 120,
-                          //             height: 120,
-                          //             fit: BoxFit.cover,
-                          //           ),
-                          //         ),
-                          //         Positioned(
-                          //           top: 4,
-                          //           right: 4,
-                          //           child: GestureDetector(
-                          //             onTap: () {
-                          //               setState(() {
-                          //                 _selectedMedia.removeAt(index);
-                          //               });
-                          //             },
-                          //             child: Container(
-                          //               padding: const EdgeInsets.all(4),
-                          //               decoration: const BoxDecoration(
-                          //                 color: Colors.red,
-                          //                 shape: BoxShape.circle,
-                          //               ),
-                          //               child: const Icon(
-                          //                 Icons.close,
-                          //                 color: Colors.white,
-                          //                 size: 16,
-                          //               ),
-                          //             ),
-                          //           ),
-                          //         ),
-                          //       ],
-                          //     ),
-                          //   );
-                          // }),
                         ],
                       ),
                     ),
@@ -579,7 +558,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                             _buildTextField(
                               controller: _priceController,
                               hintText: '0.00',
-                              prefixIcon: Icons.attach_money,
+                              prefixIcon: Icons.currency_rupee_rounded,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
