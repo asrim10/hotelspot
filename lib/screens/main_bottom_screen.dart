@@ -3,7 +3,7 @@ import 'package:hotelspot/features/home/presentation/pages/home_screen.dart';
 import 'package:hotelspot/features/home/presentation/pages/profile_screen.dart';
 import 'package:hotelspot/screens/bottom_screen/favorites_screen.dart';
 import 'package:hotelspot/screens/bottom_screen/location_screen.dart';
-import 'package:hotelspot/widgets/bottom_navigation_widget.dart';
+import 'package:hotelspot/features/home/presentation/widgets/bottom_navigation_widget.dart';
 
 class MainBottomScreen extends StatefulWidget {
   const MainBottomScreen({super.key});
