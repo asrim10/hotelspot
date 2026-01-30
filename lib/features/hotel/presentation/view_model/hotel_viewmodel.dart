@@ -5,6 +5,10 @@ import 'package:hotelspot/features/hotel/domain/usecases/create_hotel_usecase.da
 import 'package:hotelspot/features/hotel/domain/usecases/upload_image_usecase.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 
+final hotelViewmodelProvider = NotifierProvider<HotelViewmodel, HotelState>(
+  HotelViewmodel.new,
+);
+
 class HotelViewmodel extends Notifier<HotelState> {
   late final CreateHotelUsecase _createhotelUsecase;
   late final UploadImageUsecase _uploadImageUsecase;
