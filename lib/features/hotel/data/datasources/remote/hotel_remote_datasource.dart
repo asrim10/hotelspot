@@ -27,22 +27,24 @@ class HotelRemoteDatasource implements IHotelRemoteDatasource {
        _tokenService = tokenService;
 
   @override
-  Future<void> createHotel(Map<String, dynamic> hotelData) {
+  Future<bool> createHotel(Map<String, dynamic> hotelData) async {
     final token = _tokenService.getToken();
-    return _apiClient.post(
+    final response = await _apiClient.post(
       ApiEndpoints.createHotel(),
       data: hotelData,
       options: Options(headers: {'Authorization': "Bearer $token"}),
     );
+    return response.data['success'];
   }
 
   @override
-  Future<void> deleteHotel(String hotelId) {
+  Future<bool> deleteHotel(String hotelId) async {
     final token = _tokenService.getToken();
-    return _apiClient.delete(
+    final response = await _apiClient.delete(
       ApiEndpoints.deleteHotel(hotelId),
       options: Options(headers: {'Authorization': "Bearer $token"}),
     );
+    return response.data['success'];
   }
 
   @override
@@ -61,13 +63,17 @@ class HotelRemoteDatasource implements IHotelRemoteDatasource {
   }
 
   @override
-  Future<void> updateHotel(String hotelId, Map<String, dynamic> hotelData) {
+  Future<bool> updateHotel(
+    String hotelId,
+    Map<String, dynamic> hotelData,
+  ) async {
     final token = _tokenService.getToken();
-    return _apiClient.put(
+    final response = await _apiClient.put(
       ApiEndpoints.updateHotel(hotelId),
       data: hotelData,
       options: Options(headers: {'Authorization': "Bearer $token"}),
     );
+    return response.data['success'];
   }
 
   @override

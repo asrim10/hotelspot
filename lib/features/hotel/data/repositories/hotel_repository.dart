@@ -29,33 +29,114 @@ class HotelRepository implements IHotelRepository {
        _networkInfo = networkInfo;
 
   @override
-  Future<Either<Failure, bool>> createHotel(HotelEntity hotel) {
-    // TODO: implement createHotel
-    throw UnimplementedError();
+  Future<Either<Failure, bool>> createHotel(HotelEntity hotel) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final hotelData = {
+          'name': hotel.name,
+          'location': hotel.location,
+          'rating': hotel.rating,
+          'description': hotel.description,
+          'image': hotel.image,
+          'video': hotel.video,
+        };
+        final result = await _hotelRemoteDatasource.createHotel(hotelData);
+        return Right(result);
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    } else {
+      return Left(ApiFailure(message: 'No internet connection'));
+    }
   }
 
   @override
-  Future<Either<Failure, bool>> deleteHotel(String hotelId) {
-    // TODO: implement deleteHotel
-    throw UnimplementedError();
+  Future<Either<Failure, bool>> deleteHotel(String hotelId) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final result = await _hotelRemoteDatasource.deleteHotel(hotelId);
+        return Right(result);
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    } else {
+      return Left(ApiFailure(message: 'No internet connection'));
+    }
   }
 
   @override
-  Future<Either<Failure, List<HotelEntity>>> getAllHotels() {
-    // TODO: implement getAllHotels
-    throw UnimplementedError();
+  Future<Either<Failure, List<HotelEntity>>> getAllHotels() async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final result = await _hotelRemoteDatasource.getAllHotels();
+        final hotels = result
+            .map(
+              (hotelData) => HotelEntity(
+                hotelId: hotelData['hotelId'] ?? '',
+                name: hotelData['name'] ?? '',
+                location: hotelData['location'] ?? '',
+                rating: (hotelData['rating'] ?? 0).toDouble(),
+                description: hotelData['description'],
+                image: hotelData['image'],
+                video: hotelData['video'],
+              ),
+            )
+            .toList();
+        return Right(hotels);
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    } else {
+      return Left(ApiFailure(message: 'No internet connection'));
+    }
   }
 
   @override
-  Future<Either<Failure, HotelEntity>> getHotelById(String hotelId) {
-    // TODO: implement getHotelById
-    throw UnimplementedError();
+  Future<Either<Failure, HotelEntity>> getHotelById(String hotelId) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final result = await _hotelRemoteDatasource.getHotelById(hotelId);
+        final hotel = HotelEntity(
+          hotelId: result['hotelId'] ?? '',
+          name: result['name'] ?? '',
+          location: result['location'] ?? '',
+          rating: (result['rating'] ?? 0).toDouble(),
+          description: result['description'],
+          image: result['image'],
+          video: result['video'],
+        );
+        return Right(hotel);
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    } else {
+      return Left(ApiFailure(message: 'No internet connection'));
+    }
   }
 
   @override
-  Future<Either<Failure, bool>> updateHotel(HotelEntity hotel) {
-    // TODO: implement updateHotel
-    throw UnimplementedError();
+  Future<Either<Failure, bool>> updateHotel(HotelEntity hotel) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final hotelData = {
+          'name': hotel.name,
+          'location': hotel.location,
+          'rating': hotel.rating,
+          'description': hotel.description,
+          'image': hotel.image,
+          'video': hotel.video,
+        };
+        final result = await _hotelRemoteDatasource.updateHotel(
+          hotel.hotelId,
+          hotelData,
+        );
+        return Right(result);
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    } else {
+      return Left(ApiFailure(message: 'No internet connection'));
+    }
   }
 
   @override
