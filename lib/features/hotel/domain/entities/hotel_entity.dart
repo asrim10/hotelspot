@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 
 class HotelEntity extends Equatable {
@@ -6,8 +8,8 @@ class HotelEntity extends Equatable {
   final String location;
   final double rating;
   final String? description;
-  final String? image;
-  final String? video;
+  final File? image;
+  final File? video;
 
   HotelEntity({
     required this.hotelId,

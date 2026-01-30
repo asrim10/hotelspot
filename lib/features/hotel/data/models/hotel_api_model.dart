@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:hotelspot/features/hotel/domain/entities/hotel_entity.dart';
 
 class HotelApiModel {
@@ -6,8 +8,8 @@ class HotelApiModel {
   final String location;
   final double rating;
   final String? description;
-  final String? image;
-  final String? video;
+  final File? image;
+  final File? video;
 
   HotelApiModel({
     required this.id,
@@ -26,8 +28,8 @@ class HotelApiModel {
       location: json['location'] as String,
       rating: (json['rating'] as num).toDouble(),
       description: json['description'] as String?,
-      image: json['image'] as String?,
-      video: json['video'] as String?,
+      image: json['image'] != null ? File(json['image']) : null,
+      video: json['video'] != null ? File(json['video']) : null,
     );
   }
 
