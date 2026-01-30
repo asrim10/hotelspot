@@ -7,6 +7,7 @@ class HotelEntity extends Equatable {
   final double rating;
   final String? description;
   final String? image;
+  final String? video;
 
   HotelEntity({
     required this.hotelId,
@@ -15,6 +16,7 @@ class HotelEntity extends Equatable {
     required this.rating,
     this.description,
     this.image,
+    this.video,
   });
 
   @override
@@ -25,5 +27,6 @@ class HotelEntity extends Equatable {
     rating,
     description,
     image,
+    video,
   ];
 }

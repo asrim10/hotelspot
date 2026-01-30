@@ -7,6 +7,7 @@ class HotelApiModel {
   final double rating;
   final String? description;
   final String? image;
+  final String? video;
 
   HotelApiModel({
     required this.id,
@@ -15,6 +16,7 @@ class HotelApiModel {
     required this.rating,
     this.description,
     this.image,
+    this.video,
   });
 
   factory HotelApiModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,7 @@ class HotelApiModel {
       rating: (json['rating'] as num).toDouble(),
       description: json['description'] as String?,
       image: json['image'] as String?,
+      video: json['video'] as String?,
     );
   }
 
@@ -36,6 +39,7 @@ class HotelApiModel {
       'rating': rating,
       'description': description,
       'image': image,
+      'video': video,
     };
   }
 
@@ -47,6 +51,7 @@ class HotelApiModel {
       rating: rating,
       description: description,
       image: image,
+      video: video,
     );
   }
 
@@ -58,6 +63,7 @@ class HotelApiModel {
       rating: entity.rating,
       description: entity.description,
       image: entity.image,
+      video: entity.video,
     );
   }
 
