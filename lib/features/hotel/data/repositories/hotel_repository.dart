@@ -41,7 +41,8 @@ class HotelRepository implements IHotelRepository {
           'availableRooms': hotel.availableRooms,
           'rating': hotel.rating,
           'description': hotel.description,
-          'image': hotel.image,
+          if (hotel.image != null)
+            'image': hotel.image, // This is now a String (path)
         };
         final result = await _hotelRemoteDatasource.createHotel(hotelData);
         return Right(result);
@@ -75,16 +76,16 @@ class HotelRepository implements IHotelRepository {
         final hotels = result
             .map(
               (hotelData) => HotelEntity(
-                hotelId: hotelData['hotelId'] ?? '',
+                hotelId: hotelData['_id'],
                 hotelName: hotelData['hotelName'] ?? '',
                 city: hotelData['city'] ?? '',
-                price: hotelData['price'] ?? 0,
+                price: (hotelData['price'] ?? 0).toDouble(),
                 country: hotelData['country'] ?? '',
                 address: hotelData['address'] ?? '',
                 availableRooms: hotelData['availableRooms'] ?? 0,
                 rating: (hotelData['rating'] ?? 0).toDouble(),
                 description: hotelData['description'],
-                image: hotelData['image'],
+                imageUrl: hotelData['imageUrl'],
               ),
             )
             .toList();
@@ -101,18 +102,18 @@ class HotelRepository implements IHotelRepository {
   Future<Either<Failure, HotelEntity>> getHotelById(String hotelId) async {
     if (await _networkInfo.isConnected) {
       try {
-        final result = await _hotelRemoteDatasource.getHotelById(hotelId);
+        final response = await _hotelRemoteDatasource.getHotelById(hotelId);
         final hotel = HotelEntity(
-          hotelId: result['hotelId'] ?? '',
-          hotelName: result['hotelName'] ?? '',
-          city: result['city'] ?? '',
-          price: result['price'] ?? 0,
-          country: result['country'] ?? '',
-          address: result['address'] ?? '',
-          availableRooms: result['availableRooms'] ?? 0,
-          rating: (result['rating'] ?? 0).toDouble(),
-          description: result['description'],
-          image: result['image'],
+          hotelId: response['_id'],
+          hotelName: response['hotelName'] ?? '',
+          city: response['city'] ?? '',
+          price: (response['price'] ?? 0).toDouble(),
+          country: response['country'] ?? '',
+          address: response['address'] ?? '',
+          availableRooms: response['availableRooms'] ?? 0,
+          rating: (response['rating'] ?? 0).toDouble(),
+          description: response['description'],
+          imageUrl: response['imageUrl'],
         );
         return Right(hotel);
       } catch (e) {
@@ -136,7 +137,7 @@ class HotelRepository implements IHotelRepository {
           'availableRooms': hotel.availableRooms,
           'rating': hotel.rating,
           'description': hotel.description,
-          'image': hotel.image,
+          if (hotel.image != null) 'image': hotel.image,
         };
         final result = await _hotelRemoteDatasource.updateHotel(
           hotel.hotelId!,
