@@ -11,11 +11,11 @@ class HotelState extends Equatable {
   //store image name temp
   final String? uploadImageName;
 
-  HotelState({
-    required this.status,
+  const HotelState({
+    this.status = HotelStatus.initial,
     this.errorMessage,
     this.selectedHotel,
-    required this.hotels,
+    this.hotels = const [],
     this.uploadImageName,
   });
 
