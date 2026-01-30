@@ -102,14 +102,17 @@ class HotelRemoteDatasource implements IHotelRemoteDatasource {
   Future<String> uploadImage(File image) async {
     final fileName = image.path.split('/').last;
     final formData = FormData.fromMap({
-      'image': MultipartFile.fromFile(image.path, filename: fileName),
+      'image': await MultipartFile.fromFile(image.path, filename: fileName),
     });
     //get token
     final token = _tokenService.getToken();
     final response = await _apiClient.uploadFile(
       ApiEndpoints.uploadImage,
       formData: formData,
-      options: Options(headers: {'Authorization': "Bearer $token"}),
+      options: Options(
+        headers: {'Authorization': "Bearer $token"},
+        contentType: 'multipart/form-data',
+      ),
     );
     return response.data['data'];
   }
