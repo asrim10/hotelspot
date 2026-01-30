@@ -1,71 +1,89 @@
-import 'dart:io';
-
 import 'package:hotelspot/features/hotel/domain/entities/hotel_entity.dart';
 
 class HotelApiModel {
   final String id;
-  final String name;
-  final String location;
-  final double rating;
+  final String hotelName;
+  final String address;
+  final String city;
+  final String country;
+  final double price;
+  final int availableRooms;
+  final double? rating;
   final String? description;
-  final File? image;
-  final File? video;
+  final String? imageUrl;
 
   HotelApiModel({
     required this.id,
-    required this.name,
-    required this.location,
-    required this.rating,
+    required this.hotelName,
+    required this.address,
+    required this.city,
+    required this.country,
+    required this.price,
+    required this.availableRooms,
+    this.rating,
     this.description,
-    this.image,
-    this.video,
+    this.imageUrl,
   });
 
   factory HotelApiModel.fromJson(Map<String, dynamic> json) {
     return HotelApiModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      location: json['location'] as String,
-      rating: (json['rating'] as num).toDouble(),
-      description: json['description'] as String?,
-      image: json['image'] != null ? File(json['image']) : null,
-      video: json['video'] != null ? File(json['video']) : null,
+      id: json['_id'],
+      hotelName: json['hotelName'],
+      address: json['address'],
+      city: json['city'],
+      country: json['country'],
+      price: (json['price'] as num).toDouble(),
+      availableRooms: json['availableRooms'],
+      rating: json['rating'] != null
+          ? (json['rating'] as num).toDouble()
+          : null,
+      description: json['description'],
+      imageUrl: json['imageUrl'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
-      'location': location,
+      'hotelName': hotelName,
+      'address': address,
+      'city': city,
+      'country': country,
+      'price': price,
+      'availableRooms': availableRooms,
       'rating': rating,
       'description': description,
-      'image': image,
-      'video': video,
+      'imageUrl': imageUrl,
     };
   }
 
   HotelEntity toEntity() {
     return HotelEntity(
       hotelId: id,
-      name: name,
-      location: location,
-      rating: rating,
+      hotelName: hotelName,
+      city: city,
+      price: price,
+      country: country,
+      address: address,
+      availableRooms: availableRooms,
+      rating: rating ?? 0.0,
       description: description,
-      image: image,
-      video: video,
+      imageUrl: imageUrl,
     );
   }
 
   factory HotelApiModel.fromEntity(HotelEntity entity) {
     return HotelApiModel(
-      id: entity.hotelId,
-      name: entity.name,
-      location: entity.location,
+      id: entity.hotelId!,
+      hotelName: entity.hotelName,
+      address: entity.address,
+      city: entity.city,
+      country: entity.country,
+      price: entity.price,
+      availableRooms: entity.availableRooms,
       rating: entity.rating,
       description: entity.description,
-      image: entity.image,
-      video: entity.video,
+      imageUrl: entity.imageUrl,
     );
   }
 

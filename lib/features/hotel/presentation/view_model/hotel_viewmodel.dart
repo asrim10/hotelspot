@@ -22,22 +22,29 @@ class HotelViewmodel extends Notifier<HotelState> {
 
   Future<void> createHotel({
     required String hotelName,
-    required String location,
+    required String address,
+    required String country,
+    required String city,
+    required int availableRooms,
+    required double price,
     required double rating,
     String? description,
     File? image,
-    File? video,
+    String? imageUrl,
   }) async {
     state = state.copyWith(status: HotelStatus.loading);
 
     final result = await _createhotelUsecase(
       CreateHotelParams(
-        name: hotelName,
-        location: location,
+        hotelName: hotelName,
+        city: city,
+        address: address,
+        country: country,
+        availableRooms: availableRooms,
+        price: price,
         rating: rating,
         description: description,
         image: image,
-        video: video,
       ),
     );
     result.fold(

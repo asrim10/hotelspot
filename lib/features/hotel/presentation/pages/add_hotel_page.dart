@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/utils/snackbar_utils.dart';
+import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -61,6 +62,11 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
         _selectedMedia.clear();
         _selectedMedia.add(photo);
       });
+
+      //upload image to server
+      await ref
+          .read(hotelViewmodelProvider.notifier)
+          .uploadImage(File(photo.path));
     }
   }
 
@@ -85,6 +91,9 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
             _selectedMedia.clear();
             _selectedMedia.add(image);
           });
+          await ref
+              .read(hotelViewmodelProvider.notifier)
+              .uploadImage(File(image.path));
         }
       }
     } catch (e) {
@@ -200,23 +209,35 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
         _isLoading = true;
       });
 
-      // Prepare hotel data
-      final hotelData = {
-        'hotelname': _hotelNameController.text,
-        'address': _addressController.text,
-        'city': _cityController.text,
-        'country': _countryController.text,
-        'rating': _rating > 0 ? _rating : null,
-        'description': _descriptionController.text.isNotEmpty
-            ? _descriptionController.text
-            : null,
-        'price': double.parse(_priceController.text),
-        'availableRooms': int.parse(_availableRoomsController.text),
-        'images': _selectedMedia.map((e) => e.path).toList(),
-      };
+      // Get image and video files if available
+      File? imageFile;
 
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      if (_selectedMedia.isNotEmpty) {
+        final firstMedia = _selectedMedia[0];
+        if (firstMedia.path.endsWith('.jpg') ||
+            firstMedia.path.endsWith('.jpeg') ||
+            firstMedia.path.endsWith('.png')) {
+          imageFile = File(firstMedia.path);
+        } else if (firstMedia.path.endsWith('.mp4') ||
+            firstMedia.path.endsWith('.mov')) {}
+      }
+
+      // Call viewmodel to create hotel
+      await ref
+          .read(hotelViewmodelProvider.notifier)
+          .createHotel(
+            hotelName: _hotelNameController.text,
+            address: _addressController.text,
+            country: _countryController.text,
+            city: _cityController.text,
+            availableRooms: int.parse(_availableRoomsController.text),
+            price: double.parse(_priceController.text),
+            rating: _rating,
+            description: _descriptionController.text.isNotEmpty
+                ? _descriptionController.text
+                : null,
+            image: imageFile,
+          );
 
       setState(() {
         _isLoading = false;
@@ -230,7 +251,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.pop(context, hotelData);
+        Navigator.pop(context);
       }
     }
   }

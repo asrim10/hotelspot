@@ -47,6 +47,6 @@ class ApiEndpoints {
   static String updateHotelImage(String id) => '/hotels/$id/image';
   static String updateAvailableRooms(String id) => '/hotels/$id/rooms';
   static String deleteHotel(String id) => '/hotels/$id';
-  static const String uploadImage = '/upload-image';
-  static const String uploadVideo = '/upload-video';
+  static const String uploadImage = 'hotels/upload-image';
+  static const String uploadVideo = 'hotels/upload-video';
 }

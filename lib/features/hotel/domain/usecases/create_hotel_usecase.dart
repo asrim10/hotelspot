@@ -10,30 +10,39 @@ import 'package:hotelspot/features/hotel/domain/repositories/hotel_repository.da
 import 'package:hotelspot/features/hotel/data/repositories/hotel_repository.dart';
 
 class CreateHotelParams extends Equatable {
-  final String name;
-  final String location;
+  final String hotelName;
+  final String city;
+  final String address;
+  final double price;
+  final String country;
+  final int availableRooms;
   final double rating;
   final String? description;
   final File? image;
-  final File? video;
 
   const CreateHotelParams({
-    required this.name,
-    required this.location,
+    required this.hotelName,
+    required this.city,
+    required this.price,
+    required this.country,
+    required this.address,
+    required this.availableRooms,
     required this.rating,
     this.description,
     this.image,
-    this.video,
   });
 
   @override
   List<Object?> get props => [
-    name,
-    location,
+    hotelName,
+    city,
+    price,
+    country,
+    availableRooms,
     rating,
+    address,
     description,
     image,
-    video,
   ];
 }
 
@@ -50,14 +59,17 @@ class CreateHotelUsecase implements UsecaseWithParams<bool, CreateHotelParams> {
   @override
   Future<Either<Failure, bool>> call(CreateHotelParams params) {
     final entity = HotelEntity(
-      hotelId: '',
-      name: params.name,
-      location: params.location,
+      hotelName: params.hotelName,
+      address: params.address,
+      city: params.city,
+      country: params.country,
+      price: params.price,
+      availableRooms: params.availableRooms,
       rating: params.rating,
       description: params.description,
       image: params.image,
-      video: params.video,
     );
+
     return _hotelRepository.createHotel(entity);
   }
 }

@@ -27,14 +27,36 @@ class HotelRemoteDatasource implements IHotelRemoteDatasource {
        _tokenService = tokenService;
 
   @override
+  @override
   Future<bool> createHotel(Map<String, dynamic> hotelData) async {
     final token = _tokenService.getToken();
+
+    final formData = FormData.fromMap({
+      'hotelName': hotelData['hotelName'],
+      'address': hotelData['address'],
+      'city': hotelData['city'],
+      'country': hotelData['country'],
+      'rating': hotelData['rating']?.toString(),
+      'description': hotelData['description'],
+      'price': hotelData['price'].toString(),
+      'availableRooms': hotelData['availableRooms'].toString(),
+      if (hotelData['image'] != null)
+        'image': await MultipartFile.fromFile(
+          hotelData['image'].path,
+          filename: hotelData['image'].path.split('/').last,
+        ),
+    });
+
     final response = await _apiClient.post(
       ApiEndpoints.createHotel(),
-      data: hotelData,
-      options: Options(headers: {'Authorization': "Bearer $token"}),
+      data: formData,
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+        contentType: 'multipart/form-data',
+      ),
     );
-    return response.data['success'];
+
+    return response.data['success'] == true;
   }
 
   @override
@@ -89,7 +111,7 @@ class HotelRemoteDatasource implements IHotelRemoteDatasource {
       formData: formData,
       options: Options(headers: {'Authorization': "Bearer $token"}),
     );
-    return response.data['success'];
+    return response.data['data'];
   }
 
   @override
