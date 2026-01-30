@@ -29,7 +29,6 @@ class HotelViewmodel extends Notifier<HotelState> {
     required double price,
     required double rating,
     String? description,
-    File? image,
     String? imageUrl,
   }) async {
     state = state.copyWith(status: HotelStatus.loading);
@@ -44,7 +43,7 @@ class HotelViewmodel extends Notifier<HotelState> {
         price: price,
         rating: rating,
         description: description,
-        image: image,
+        imageUrl: imageUrl,
       ),
     );
     result.fold(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/utils/snackbar_utils.dart';
+import 'package:hotelspot/features/hotel/domain/usecases/upload_image_usecase.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -211,6 +212,10 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
 
       // Get image and video files if available
       File? imageFile;
+      final imageUrl = await ref
+          .read(uploadImageProvider)
+          .call(UploadImageParams(image: File(_selectedMedia[0].path)))
+          .then((r) => r.getOrElse(() => ''));
 
       if (_selectedMedia.isNotEmpty) {
         final firstMedia = _selectedMedia[0];
@@ -228,15 +233,13 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
           .createHotel(
             hotelName: _hotelNameController.text,
             address: _addressController.text,
-            country: _countryController.text,
             city: _cityController.text,
-            availableRooms: int.parse(_availableRoomsController.text),
-            price: double.parse(_priceController.text),
+            country: _countryController.text,
             rating: _rating,
-            description: _descriptionController.text.isNotEmpty
-                ? _descriptionController.text
-                : null,
-            image: imageFile,
+            description: _descriptionController.text,
+            price: double.parse(_priceController.text),
+            availableRooms: int.parse(_availableRoomsController.text),
+            imageUrl: imageUrl,
           );
 
       setState(() {

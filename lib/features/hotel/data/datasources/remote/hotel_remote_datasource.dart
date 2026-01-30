@@ -40,20 +40,13 @@ class HotelRemoteDatasource implements IHotelRemoteDatasource {
       'description': hotelData['description'],
       'price': hotelData['price'].toString(),
       'availableRooms': hotelData['availableRooms'].toString(),
-      if (hotelData['image'] != null)
-        'image': await MultipartFile.fromFile(
-          hotelData['image'].path,
-          filename: hotelData['image'].path.split('/').last,
-        ),
+      'imageUrl': hotelData['imageUrl'],
     });
 
     final response = await _apiClient.post(
       ApiEndpoints.createHotel(),
       data: formData,
-      options: Options(
-        headers: {'Authorization': 'Bearer $token'},
-        contentType: 'multipart/form-data',
-      ),
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
 
     return response.data['success'] == true;

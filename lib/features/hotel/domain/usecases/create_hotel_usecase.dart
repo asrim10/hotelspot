@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +16,7 @@ class CreateHotelParams extends Equatable {
   final int availableRooms;
   final double rating;
   final String? description;
-  final File? image;
+  final String? imageUrl;
 
   const CreateHotelParams({
     required this.hotelName,
@@ -29,7 +27,7 @@ class CreateHotelParams extends Equatable {
     required this.availableRooms,
     required this.rating,
     this.description,
-    this.image,
+    this.imageUrl,
   });
 
   @override
@@ -42,7 +40,7 @@ class CreateHotelParams extends Equatable {
     rating,
     address,
     description,
-    image,
+    imageUrl,
   ];
 }
 
@@ -67,7 +65,7 @@ class CreateHotelUsecase implements UsecaseWithParams<bool, CreateHotelParams> {
       availableRooms: params.availableRooms,
       rating: params.rating,
       description: params.description,
-      image: params.image,
+      imageUrl: params.imageUrl,
     );
 
     return _hotelRepository.createHotel(entity);
