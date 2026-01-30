@@ -20,6 +20,12 @@ class TokenService {
   }
 
   //get token
+  String? getToken() {
+    return _prefs.getString(_tokenKey);
+  }
 
   //remove token
+  Future<void> removeToken() async {
+    await _prefs.remove(_tokenKey);
+  }
 }
