@@ -1,15 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hotelspot/core/api/api_endpoints.dart';
+import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
+import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const Color topLeft = Color(0xFF6C5CC4);
   static const Color topRight = Color(0xFF6C5CC4);
   static const Color cardPurple = Color(0xFF485D88);
   static const Color priceBlue = Color(0xFF1E90FF);
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch hotels when screen loads
+    Future.microtask(() {
+      ref.read(hotelViewmodelProvider.notifier).getAllHotels();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final hotelState = ref.watch(hotelViewmodelProvider);
+    final hotels = hotelState.hotels;
+
     return Scaffold(
       backgroundColor: topLeft,
       body: SafeArea(
@@ -231,33 +252,85 @@ class HomeScreen extends StatelessWidget {
 
                       const SizedBox(height: 12),
 
-                      _hotelRow(
-                        'assets/images/sarangkot.jpeg',
-                        'Sarangkot Lodge',
-                        '4.9(150+)',
-                        'Pokhara',
-                      ),
-                      const SizedBox(height: 12),
-                      _hotelRow(
-                        'assets/images/hotel2.jpg',
-                        'Sarangkot Lodge',
-                        '4.9(150+)',
-                        'Pokhara',
-                      ),
-                      const SizedBox(height: 12),
-                      _hotelRow(
-                        'assets/images/hotel.jpg',
-                        'Cozy Stay',
-                        '4.7(80+)',
-                        'Pokhara',
-                      ),
-                      const SizedBox(height: 12),
-                      _hotelRow(
-                        'assets/images/hotel4.jpg',
-                        'Lakeside Inn',
-                        '4.8(120+)',
-                        'Pokhara',
-                      ),
+                      // Show loading, error, or hotels
+                      if (hotelState.status == HotelStatus.loading)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                      else if (hotelState.status == HotelStatus.error)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Text(
+                              hotelState.errorMessage ??
+                                  'Failed to load hotels',
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                        )
+                      else if (hotels.isEmpty)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Text(
+                              'No hotels available',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                        )
+                      else
+                        // Display hotels in a grid (2 columns)
+                        Column(
+                          children: List.generate((hotels.length / 2).ceil(), (
+                            rowIndex,
+                          ) {
+                            final startIndex = rowIndex * 2;
+                            final endIndex = (startIndex + 2).clamp(
+                              0,
+                              hotels.length,
+                            );
+                            final rowHotels = hotels.sublist(
+                              startIndex,
+                              endIndex,
+                            );
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: _hotelCard(
+                                      rowHotels[0].imageUrl ?? '',
+                                      rowHotels[0].hotelName,
+                                      rowHotels[0].rating.toString(),
+                                      rowHotels[0].city,
+                                      rowHotels[0].price,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  if (rowHotels.length > 1)
+                                    Expanded(
+                                      child: _hotelCard(
+                                        rowHotels[1].imageUrl ?? '',
+                                        rowHotels[1].hotelName,
+                                        rowHotels[1].rating.toString(),
+                                        rowHotels[1].city,
+                                        rowHotels[1].price,
+                                      ),
+                                    )
+                                  else
+                                    const Expanded(child: SizedBox()),
+                                ],
+                              ),
+                            );
+                          }),
+                        ),
+
                       const SizedBox(height: 28),
                     ],
                   ),
@@ -270,7 +343,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Updated: accept IconData and render a Material icon instead of an image asset
   static Widget _categoryItem(IconData iconData, String label) {
     return SizedBox(
       width: 84,
@@ -286,7 +358,7 @@ class HomeScreen extends StatelessWidget {
                 BoxShadow(
                   color: Colors.black.withOpacity(0.08),
                   blurRadius: 8,
-                  offset: Offset(0, 4),
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -306,27 +378,17 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  static Widget _hotelRow(
-    String leftImg,
-    String leftTitle,
-    String leftRate,
-    String leftLocation,
-  ) {
-    return Row(
-      children: [
-        Expanded(child: _hotelCard(leftImg, leftTitle, leftRate, leftLocation)),
-        const SizedBox(width: 12),
-        Expanded(child: _hotelCard(leftImg, leftTitle, leftRate, leftLocation)),
-      ],
-    );
-  }
-
   static Widget _hotelCard(
-    String imageAsset,
+    String imageUrl,
     String title,
     String rating,
     String location,
+    double price,
   ) {
+    final baseUrl = ApiEndpoints.baseUrl.replaceAll('/api/v1', '');
+
+    final fullImageUrl = imageUrl.isNotEmpty ? '$baseUrl$imageUrl' : '';
+
     return Container(
       height: 260,
       decoration: BoxDecoration(
@@ -336,7 +398,7 @@ class HomeScreen extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
             blurRadius: 6,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -349,13 +411,54 @@ class HomeScreen extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(12),
               ),
-              image: DecorationImage(
-                image: AssetImage(imageAsset),
-                fit: BoxFit.cover,
-              ),
+              color: Colors.grey[300],
             ),
             child: Stack(
               children: [
+                // Image
+                if (fullImageUrl.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: Image.network(
+                      fullImageUrl,
+                      width: double.infinity,
+                      height: 150,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(
+                              Icons.hotel,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                else
+                  Container(
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(Icons.hotel, size: 50, color: Colors.grey),
+                    ),
+                  ),
+
                 Positioned(
                   top: 8,
                   left: 8,
@@ -385,9 +488,9 @@ class HomeScreen extends StatelessWidget {
                       color: priceBlue,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'NRs.20K',
-                      style: TextStyle(
+                    child: Text(
+                      'NRs.${price.toStringAsFixed(0)}',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -404,6 +507,8 @@ class HomeScreen extends StatelessWidget {
             child: Text(
               title,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
 
@@ -417,9 +522,13 @@ class HomeScreen extends StatelessWidget {
                 const Spacer(),
                 const Icon(Icons.location_on, size: 14, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text(
-                  location,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                Expanded(
+                  child: Text(
+                    location,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -428,22 +537,23 @@ class HomeScreen extends StatelessWidget {
           const Spacer(),
           Container(
             height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2F2F4),
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(12),
-              ),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF2F2F4),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
-              children: const [
-                Icon(Icons.star, color: Colors.amber, size: 14),
-                SizedBox(width: 6),
-                Text('4.9', style: TextStyle(fontSize: 13)),
-                Spacer(),
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 14),
+                const SizedBox(width: 6),
+                Text(rating, style: const TextStyle(fontSize: 13)),
+                const Spacer(),
                 Text(
-                  'NRs.20K',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  'NRs.${price.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
