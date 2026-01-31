@@ -76,7 +76,11 @@ dependencies:
   video_compress: ^3.1.4
   cached_network_image: ^3.4.1
   video_thumbnail: ^0.5.6
+
+  # Test
   test_cov_console: ^0.2.2
+  hooks_riverpod: ^3.0.3
+  network_image_mock: ^2.1.1
 
 dev_dependencies:
   flutter_test:
