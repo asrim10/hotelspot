@@ -321,6 +321,9 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
         final currentState = ref.read(hotelViewmodelProvider);
 
         if (currentState.status == HotelStatus.created) {
+          // Re-fetch so HomeScreen updates
+          ref.read(hotelViewmodelProvider.notifier).getAllHotels();
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Hotel added successfully!'),
