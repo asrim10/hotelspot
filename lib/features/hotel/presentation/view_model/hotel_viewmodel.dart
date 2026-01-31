@@ -46,12 +46,13 @@ class HotelViewmodel extends Notifier<HotelState> {
         imageUrl: imageUrl,
       ),
     );
+
     result.fold(
       (failure) => state = state.copyWith(
         status: HotelStatus.error,
         errorMessage: failure.message,
       ),
-      (success) => {state = state.copyWith(status: HotelStatus.created)},
+      (success) => state = state.copyWith(status: HotelStatus.created),
     );
   }
 

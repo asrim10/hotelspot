@@ -27,29 +27,61 @@ class HotelRemoteDatasource implements IHotelRemoteDatasource {
        _tokenService = tokenService;
 
   @override
-  @override
   Future<bool> createHotel(Map<String, dynamic> hotelData) async {
-    final token = _tokenService.getToken();
+    try {
+      final token = _tokenService.getToken();
 
-    final formData = FormData.fromMap({
-      'hotelName': hotelData['hotelName'],
-      'address': hotelData['address'],
-      'city': hotelData['city'],
-      'country': hotelData['country'],
-      'rating': hotelData['rating']?.toString(),
-      'description': hotelData['description'],
-      'price': hotelData['price'].toString(),
-      'availableRooms': hotelData['availableRooms'].toString(),
-      'imageUrl': hotelData['imageUrl'],
-    });
+      print('=== CREATE HOTEL DEBUG ===');
+      print('Raw hotelData received: $hotelData');
 
-    final response = await _apiClient.post(
-      ApiEndpoints.createHotel(),
-      data: formData,
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
+      // Prepare imageUrl
+      String? imageUrl;
+      if (hotelData['imageUrl'] != null &&
+          hotelData['imageUrl'].toString().isNotEmpty) {
+        imageUrl = hotelData['imageUrl'].toString();
+        print('ImageUrl found: $imageUrl');
+      } else {
+        print('ImageUrl is NULL or EMPTY in hotelData');
+      }
 
-    return response.data['success'] == true;
+      // Send as JSON, NOT FormData
+      final data = {
+        'hotelName': hotelData['hotelName'],
+        'address': hotelData['address'],
+        'city': hotelData['city'],
+        'country': hotelData['country'],
+        'rating': hotelData['rating'],
+        'price': hotelData['price'],
+        'availableRooms': hotelData['availableRooms'],
+        if (hotelData['description'] != null &&
+            hotelData['description'].toString().isNotEmpty)
+          'description': hotelData['description'],
+        if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+      };
+
+      print('Final data being sent to backend: $data');
+      print('========================');
+
+      final response = await _apiClient.post(
+        ApiEndpoints.createHotel(),
+        data: data,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      print('Hotel creation response: ${response.data}');
+      return response.data['success'] == true;
+    } catch (e) {
+      print('Error creating hotel: $e');
+      if (e is DioException) {
+        print('Error response: ${e.response?.data}');
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -92,22 +124,56 @@ class HotelRemoteDatasource implements IHotelRemoteDatasource {
   }
 
   @override
+  @override
   Future<String> uploadImage(File image) async {
-    final fileName = image.path.split('/').last;
-    final formData = FormData.fromMap({
-      'image': await MultipartFile.fromFile(image.path, filename: fileName),
-    });
-    //get token
-    final token = _tokenService.getToken();
-    final response = await _apiClient.uploadFile(
-      ApiEndpoints.uploadImage,
-      formData: formData,
-      options: Options(
-        headers: {'Authorization': "Bearer $token"},
-        contentType: 'multipart/form-data',
-      ),
-    );
-    return response.data['data'];
+    try {
+      final fileName = image.path.split('/').last;
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(image.path, filename: fileName),
+      });
+
+      // Get token
+      final token = _tokenService.getToken();
+
+      print('Uploading image: $fileName');
+
+      final response = await _apiClient.uploadFile(
+        ApiEndpoints.uploadImage,
+        formData: formData,
+        options: Options(headers: {'Authorization': "Bearer $token"}),
+      );
+
+      print('Upload image full response: ${response.data}');
+
+      // Backend returns: { success: true, message: "...", data: {imageUrl: "/uploads/images/..."} }
+      if (response.data['data'] != null) {
+        final data = response.data['data'];
+
+        // FIXED: Extract imageUrl from the Map
+        if (data is Map) {
+          final imageUrl = data['imageUrl'];
+          if (imageUrl != null) {
+            print('Extracted imageUrl: $imageUrl');
+            return imageUrl.toString();
+          }
+        }
+
+        // If data is a string
+        if (data is String) {
+          print('ImageUrl as string: $data');
+          return data;
+        }
+      }
+
+      // Fallback
+      throw Exception('Could not extract imageUrl from upload response');
+    } catch (e) {
+      print('Error uploading image: $e');
+      if (e is DioException) {
+        print('Error response: ${e.response?.data}');
+      }
+      rethrow;
+    }
   }
 
   @override

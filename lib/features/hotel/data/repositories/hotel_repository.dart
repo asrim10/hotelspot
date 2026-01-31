@@ -41,9 +41,10 @@ class HotelRepository implements IHotelRepository {
           'availableRooms': hotel.availableRooms,
           'rating': hotel.rating,
           'description': hotel.description,
-          if (hotel.image != null)
-            'image': hotel.image, // This is now a String (path)
+          if (hotel.imageUrl != null && hotel.imageUrl!.isNotEmpty)
+            'imageUrl': hotel.imageUrl, // ONLY imageUrl
         };
+
         final result = await _hotelRemoteDatasource.createHotel(hotelData);
         return Right(result);
       } catch (e) {
@@ -137,7 +138,8 @@ class HotelRepository implements IHotelRepository {
           'availableRooms': hotel.availableRooms,
           'rating': hotel.rating,
           'description': hotel.description,
-          if (hotel.image != null) 'image': hotel.image,
+          if (hotel.imageUrl != null && hotel.imageUrl!.isNotEmpty)
+            'imageUrl': hotel.imageUrl,
         };
         final result = await _hotelRemoteDatasource.updateHotel(
           hotel.hotelId!,

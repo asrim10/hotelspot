@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/utils/snackbar_utils.dart';
-import 'package:hotelspot/features/hotel/domain/usecases/upload_image_usecase.dart';
+import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -27,9 +27,12 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
 
   double _rating = 0.0;
   bool _isLoading = false;
+  bool _isUploadingImage = false;
 
   final List<XFile> _selectedMedia = [];
   final ImagePicker _imagePicker = ImagePicker();
+
+  String? _uploadedImageUrl;
 
   Future<bool> _userPermission(Permission permission) async {
     final status = await permission.status;
@@ -64,45 +67,108 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
         _selectedMedia.add(photo);
       });
 
-      //upload image to server
-      await ref
-          .read(hotelViewmodelProvider.notifier)
-          .uploadImage(File(photo.path));
+      // Upload image to server and store the URL
+      await _uploadImageToServer(File(photo.path));
     }
   }
 
   //code for gallery
   Future<void> _pickFromGallery({bool allowMultiple = false}) async {
     try {
-      if (allowMultiple) {
-        final List<XFile> images = await _imagePicker.pickMultiImage(
-          imageQuality: 80,
-        );
-        if (images.isNotEmpty) {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
           _selectedMedia.clear();
-          _selectedMedia.addAll(images);
-        }
-      } else {
-        final XFile? image = await _imagePicker.pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 80,
-        );
-        if (image != null) {
-          setState(() {
-            _selectedMedia.clear();
-            _selectedMedia.add(image);
-          });
-          await ref
-              .read(hotelViewmodelProvider.notifier)
-              .uploadImage(File(image.path));
+          _selectedMedia.add(image);
+        });
+
+        // Upload image to server and store the URL
+        await _uploadImageToServer(File(image.path));
+      }
+    } on PlatformException catch (e) {
+      debugPrint("Gallery PlatformException: $e");
+      if (e.code == 'photo_access_denied') {
+        if (mounted) {
+          SnackbarUtils.showError(
+            context,
+            "Please grant photo library access in settings",
+          );
         }
       }
     } catch (e) {
-      debugPrint("Gallery Error $e");
+      debugPrint("Gallery Error: $e");
+      // Only show error if it's actually a permission issue
+      if (e.toString().contains('permission') ||
+          e.toString().contains('denied')) {
+        if (mounted) {
+          SnackbarUtils.showError(
+            context,
+            "Could not access your gallery, Please check permissions",
+          );
+        }
+      }
+    }
+  }
+
+  // New method to upload image and store the URL
+  Future<void> _uploadImageToServer(File imageFile) async {
+    setState(() {
+      _isUploadingImage = true;
+    });
+
+    try {
+      await ref.read(hotelViewmodelProvider.notifier).uploadImage(imageFile);
+
+      // Get the uploaded image URL from state
+      final state = ref.read(hotelViewmodelProvider);
+
+      if (state.status == HotelStatus.loaded && state.uploadImageName != null) {
+        setState(() {
+          _uploadedImageUrl = state.uploadImageName; // STORE IT HERE
+          _isUploadingImage = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image uploaded successfully!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else if (state.status == HotelStatus.error) {
+        setState(() {
+          _isUploadingImage = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage ?? 'Failed to upload image'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isUploadingImage = false;
+      });
+
       if (mounted) {
-        SnackbarUtils.showError(
-          context,
-          "Could not access your gallery, Please click image with camera",
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading image: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -138,34 +204,34 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(Icons.camera),
-                title: Text("Open Camera"),
+                leading: const Icon(Icons.camera),
+                title: const Text("Open Camera"),
                 onTap: () {
                   Navigator.pop(context);
                   _cameraPicture();
                 },
               ),
               ListTile(
-                leading: Icon(Icons.image),
-                title: Text("Open Gallery"),
+                leading: const Icon(Icons.image),
+                title: const Text("Open Gallery"),
                 onTap: () {
                   Navigator.pop(context);
                   _pickFromGallery();
                 },
               ),
               ListTile(
-                leading: Icon(Icons.video_chat),
-                title: Text("Capture Video"),
+                leading: const Icon(Icons.video_chat),
+                title: const Text("Capture Video"),
                 onTap: () {
                   Navigator.pop(context);
                   _pickVideo();
@@ -182,11 +248,20 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Give Permission'),
-        content: Text("Go to settings to use this feature"),
+        title: const Text('Give Permission'),
+        content: const Text("Go to settings to use this feature"),
         actions: [
-          TextButton(onPressed: () {}, child: Text('Cancel')),
-          TextButton(onPressed: () {}, child: Text('Open Settings')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
         ],
       ),
     );
@@ -206,26 +281,20 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
 
   Future<void> _saveHotel() async {
     if (_formKey.currentState!.validate()) {
+      if (_uploadedImageUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select and upload an image'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
       setState(() {
         _isLoading = true;
       });
-
-      // Get image and video files if available
-      File? imageFile;
-      final imageUrl = await ref
-          .read(uploadImageProvider)
-          .call(UploadImageParams(image: File(_selectedMedia[0].path)))
-          .then((r) => r.getOrElse(() => ''));
-
-      if (_selectedMedia.isNotEmpty) {
-        final firstMedia = _selectedMedia[0];
-        if (firstMedia.path.endsWith('.jpg') ||
-            firstMedia.path.endsWith('.jpeg') ||
-            firstMedia.path.endsWith('.png')) {
-          imageFile = File(firstMedia.path);
-        } else if (firstMedia.path.endsWith('.mp4') ||
-            firstMedia.path.endsWith('.mov')) {}
-      }
 
       // Call viewmodel to create hotel
       await ref
@@ -236,10 +305,12 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
             city: _cityController.text,
             country: _countryController.text,
             rating: _rating,
-            description: _descriptionController.text,
-            price: double.parse(_priceController.text),
-            availableRooms: int.parse(_availableRoomsController.text),
-            imageUrl: imageUrl,
+            description: _descriptionController.text.isNotEmpty
+                ? _descriptionController.text
+                : null,
+            price: double.tryParse(_priceController.text) ?? 0.0,
+            availableRooms: int.tryParse(_availableRoomsController.text) ?? 0,
+            imageUrl: _uploadedImageUrl,
           );
 
       setState(() {
@@ -247,14 +318,26 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Hotel added successfully!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        Navigator.pop(context);
+        final currentState = ref.read(hotelViewmodelProvider);
+
+        if (currentState.status == HotelStatus.created) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Hotel added successfully!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.pop(context);
+        } else if (currentState.status == HotelStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(currentState.errorMessage ?? 'Failed to add hotel'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
   }
@@ -281,11 +364,13 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: _isLoading ? null : _saveHotel,
+            onPressed: (_isLoading || _isUploadingImage) ? null : _saveHotel,
             child: Text(
               'Save',
               style: TextStyle(
-                color: _isLoading ? Colors.grey : const Color(0xFF1E88E5),
+                color: (_isLoading || _isUploadingImage)
+                    ? Colors.grey
+                    : const Color(0xFF1E88E5),
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -323,9 +408,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                         children: [
                           // Add Image Button
                           GestureDetector(
-                            onTap: () {
-                              _pickMedia();
-                            },
+                            onTap: _isUploadingImage ? null : _pickMedia,
                             child: Container(
                               width: 120,
                               margin: const EdgeInsets.only(right: 12),
@@ -337,50 +420,76 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                   style: BorderStyle.solid,
                                 ),
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.add_photo_alternate_outlined,
-                                    color: Colors.grey[600],
-                                    size: 32,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Add Image',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
+                              child: _isUploadingImage
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.add_photo_alternate_outlined,
+                                          color: Colors.grey[600],
+                                          size: 32,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Add Image',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
                             ),
                           ),
                           // Selected Images
-                          const SizedBox(height: 24),
                           if (_selectedMedia.isNotEmpty) ...[
                             Stack(
                               children: [
                                 Container(
-                                  width: 200,
-                                  height: 200,
+                                  width: 120,
+                                  height: 120,
+                                  margin: const EdgeInsets.only(right: 12),
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(12),
                                     image: DecorationImage(
                                       image: FileImage(
                                         File(_selectedMedia[0].path),
                                       ),
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
                                 ),
+                                // Green checkmark
+                                if (_uploadedImageUrl != null)
+                                  Positioned(
+                                    bottom: 4,
+                                    right: 16,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                // Close button
                                 Positioned(
                                   top: 4,
-                                  right: 4,
+                                  right: 16,
                                   child: GestureDetector(
                                     onTap: () {
                                       setState(() {
                                         _selectedMedia.clear();
+                                        _uploadedImageUrl = null;
                                       });
                                     },
                                     child: Container(
@@ -403,6 +512,30 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                         ],
                       ),
                     ),
+                    if (_uploadedImageUrl != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Image uploaded: $_uploadedImageUrl',
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontSize: 12,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -669,7 +802,9 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _saveHotel,
+                    onPressed: (_isLoading || _isUploadingImage)
+                        ? null
+                        : _saveHotel,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1E88E5),
                       foregroundColor: Colors.white,
@@ -677,6 +812,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      disabledBackgroundColor: Colors.grey[300],
                     ),
                     child: _isLoading
                         ? const SizedBox(
@@ -687,9 +823,11 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                               strokeWidth: 2.5,
                             ),
                           )
-                        : const Text(
-                            'Add Hotel',
-                            style: TextStyle(
+                        : Text(
+                            _isUploadingImage
+                                ? 'Uploading Image...'
+                                : 'Add Hotel',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
