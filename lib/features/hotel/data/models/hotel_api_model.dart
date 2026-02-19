@@ -1,5 +1,9 @@
 import 'package:hotelspot/features/hotel/domain/entities/hotel_entity.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'hotel_api_model.g.dart';
+
+@JsonSerializable()
 class HotelApiModel {
   final String id;
   final String hotelName;

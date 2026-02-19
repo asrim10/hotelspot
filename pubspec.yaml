@@ -81,6 +81,7 @@ dependencies:
   test_cov_console: ^0.2.2
   hooks_riverpod: ^3.0.3
   network_image_mock: ^2.1.1
+  analyzer: ^6.4.1
 
 dev_dependencies:
   flutter_test:

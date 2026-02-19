@@ -1,5 +1,9 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:hotelspot/features/auth/domain/entities/auth_entity.dart';
 
+part 'auth_api_model.g.dart';
+
+@JsonSerializable()
 class AuthApiModel {
   final String? id;
   final String fullName;
