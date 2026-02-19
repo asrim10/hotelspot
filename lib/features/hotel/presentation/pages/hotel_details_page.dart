@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/api/api_endpoints.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
+import 'package:hotelspot/features/booking/presentation/pages/booking_page.dart';
 
 class HotelDetailsPage extends ConsumerStatefulWidget {
   final String hotelId;
@@ -105,10 +106,12 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                               if (hotel == null) return;
 
                               // Navigate to booking page
-                              Navigator.pushNamed(
+                              Navigator.push(
                                 context,
-                                "/booking",
-                                arguments: hotel,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      BookingPage(hotel: hotel),
+                                ),
                               );
                             },
                             child: const Text(
