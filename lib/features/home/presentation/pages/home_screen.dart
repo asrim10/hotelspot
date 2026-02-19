@@ -4,6 +4,7 @@ import 'package:hotelspot/core/api/api_endpoints.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:hotelspot/features/hotel/presentation/pages/hotel_details_page.dart';
+import 'package:hotelspot/features/hotel/presentation/pages/all_hotels_page.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -243,7 +244,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           GestureDetector(
                             onTap: () {
                               // Navigate to see all hotels
-                              Navigator.pushNamed(context, '/all-hotels');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const AllHotelsPage(),
+                                ),
+                              );
                             },
                             child: const Text(
                               'See all',
