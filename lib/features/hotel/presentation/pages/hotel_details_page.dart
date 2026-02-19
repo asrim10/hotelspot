@@ -29,9 +29,9 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final hotelState = ref.watch(hotelViewmodelProvider);
-
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E21),
+
       body: hotelState.status == HotelStatus.loading
           ? const Center(child: CircularProgressIndicator(color: Colors.orange))
           : hotelState.status == HotelStatus.error
@@ -65,18 +65,81 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                 style: TextStyle(color: Colors.white),
               ),
             )
-          : _buildHotelContent(hotelState),
+          : Stack(
+              children: [
+                _buildHotelContent(hotelState),
+
+                // BOOK NOW BUTTON FIXED AT BOTTOM
+                Positioned(
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0A0E21).withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withOpacity(0.15)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            onPressed: () {
+                              final hotel = hotelState.selectedHotel;
+
+                              if (hotel == null) return;
+
+                              // Navigate to booking page
+                              Navigator.pushNamed(
+                                context,
+                                "/booking",
+                                arguments: hotel,
+                              );
+                            },
+                            child: const Text(
+                              "Book Now",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
   Widget _buildHotelContent(HotelState hotelState) {
     final hotel = hotelState.selectedHotel!;
 
-    // Create list of hotel images (you can expand this based on your hotel entity)
-    final List<String> hotelImages =
-        hotel.imageUrl != null && hotel.imageUrl!.isNotEmpty
-        ? [hotel.imageUrl!]
-        : [];
+    // Fix image URL - remove /api/v1 from base URL (same as AllHotelsPage)
+    final baseUrl = ApiEndpoints.baseUrl.replaceAll('/api/v1', '');
+    final String? fullImageUrl = (hotel.imageUrl ?? '').isNotEmpty
+        ? '$baseUrl${hotel.imageUrl}'
+        : null;
+
+    final List<String> hotelImages = fullImageUrl != null ? [fullImageUrl] : [];
 
     return CustomScrollView(
       slivers: [
@@ -117,7 +180,7 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                         },
                         itemBuilder: (context, index) {
                           return Image.network(
-                            '${ApiEndpoints.baseUrl}/${hotelImages[index]}',
+                            hotelImages[index],
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
@@ -293,7 +356,8 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                       Expanded(
                         child: _buildInfoCard(
                           title: 'COST',
-                          value: '${hotel.price.toStringAsFixed(0)} NRs',
+                          value:
+                              '${(hotel.price * 1000).toStringAsFixed(0)} NRs',
                           subtitle: 'NIGHT',
                           icon: Icons.attach_money,
                         ),
@@ -368,13 +432,16 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                             color: Colors.white38,
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            hotel.address,
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              hotel.address,
+                              style: const TextStyle(
+                                color: Colors.white60,
+                                fontSize: 12,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
