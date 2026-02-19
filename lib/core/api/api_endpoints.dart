@@ -34,8 +34,6 @@ class ApiEndpoints {
   static const String updateUser = '/auth/users';
   static const String deleteUser = '/auth/users';
 
-  //hotel endpoints
-
   // Hotel endpoints
   static const String hotels = '/hotels';
   static String hotelById(String id) => '/hotels/$id';
@@ -49,4 +47,19 @@ class ApiEndpoints {
   static String deleteHotel(String id) => '/hotels/$id';
   static const String uploadImage = '/hotels/upload-photo';
   static const String uploadVideo = '/hotels/upload-video';
+
+  //Booking endpoints
+  static const String bookings = '/bookings';
+  static String createBooking() => '/bookings';
+  static const String myBookings = '/bookings/me';
+  static String bookingById(String id) => '/bookings/$id';
+  static String updateBooking(String id) => '/bookings/$id';
+  static String deleteBooking(String id) => '/bookings/$id';
+
+  //fav endpoints
+  static const String favourites = '/favourites';
+  static String addFavourite() => '/favourites';
+  static const String myFavourites = '/favourites/me';
+  static String favouriteById(String id) => '/favourites/$id';
+  static String removeFavourite(String id) => '/favourites/$id';
 }
