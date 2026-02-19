@@ -6,21 +6,25 @@ import 'package:uuid/uuid.dart';
 part 'booking_hive_model.g.dart';
 
 @HiveType(typeId: HiveTableConstant.bookingId)
-class BookingHiveModel extends HiveObject {
+class BookingHiveModel {
   @HiveField(0)
-  final String? bookingId;
+  final String bookingId;
+
   @HiveField(1)
   final String userId;
+
   @HiveField(2)
   final String hotelId;
 
   @HiveField(3)
   final String fullName;
+
   @HiveField(4)
   final String email;
 
   @HiveField(5)
   final String checkInDate;
+
   @HiveField(6)
   final String checkOutDate;
 
@@ -29,6 +33,7 @@ class BookingHiveModel extends HiveObject {
 
   @HiveField(8)
   final String? paymentMethod;
+
   @HiveField(9)
   final String? paymentStatus;
 
@@ -37,6 +42,7 @@ class BookingHiveModel extends HiveObject {
 
   @HiveField(11)
   final DateTime? createdAt;
+
   @HiveField(12)
   final DateTime? updatedAt;
 
@@ -52,9 +58,30 @@ class BookingHiveModel extends HiveObject {
     this.paymentMethod,
     this.paymentStatus,
     required this.status,
-    this.createdAt,
-    this.updatedAt,
-  }) : bookingId = bookingId ?? const Uuid().v4();
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) : bookingId = bookingId ?? const Uuid().v4(),
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
+
+  // Convert to Entity
+  BookingEntity toEntity() {
+    return BookingEntity(
+      bookingId: bookingId,
+      userId: userId,
+      hotelId: hotelId,
+      fullName: fullName,
+      email: email,
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
+      totalPrice: totalPrice,
+      paymentMethod: paymentMethod,
+      paymentStatus: paymentStatus,
+      status: status,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
 
   // From Entity
   factory BookingHiveModel.fromEntity(BookingEntity entity) {
@@ -75,26 +102,40 @@ class BookingHiveModel extends HiveObject {
     );
   }
 
-  // To Entity
-  BookingEntity toEntity() {
-    return BookingEntity(
-      bookingId: bookingId,
-      userId: userId,
-      hotelId: hotelId,
-      fullName: fullName,
-      email: email,
-      checkInDate: checkInDate,
-      checkOutDate: checkOutDate,
-      totalPrice: totalPrice,
-      paymentMethod: paymentMethod,
-      paymentStatus: paymentStatus,
-      status: status,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
+  // Copy with method for updates
+  BookingHiveModel copyWith({
+    String? bookingId,
+    String? userId,
+    String? hotelId,
+    String? fullName,
+    String? email,
+    String? checkInDate,
+    String? checkOutDate,
+    double? totalPrice,
+    String? paymentMethod,
+    String? paymentStatus,
+    String? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return BookingHiveModel(
+      bookingId: bookingId ?? this.bookingId,
+      userId: userId ?? this.userId,
+      hotelId: hotelId ?? this.hotelId,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      checkInDate: checkInDate ?? this.checkInDate,
+      checkOutDate: checkOutDate ?? this.checkOutDate,
+      totalPrice: totalPrice ?? this.totalPrice,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
     );
   }
 
-  // To Entity List
+  // Convert list of models to entities
   static List<BookingEntity> toEntityList(List<BookingHiveModel> models) {
     return models.map((model) => model.toEntity()).toList();
   }
