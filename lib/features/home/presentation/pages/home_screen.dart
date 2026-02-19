@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/api/api_endpoints.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
+import 'package:hotelspot/features/hotel/presentation/pages/hotel_details_page.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -239,12 +240,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ],
                           ),
-                          const Text(
-                            'See all',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                          GestureDetector(
+                            onTap: () {
+                              // Navigate to see all hotels
+                              Navigator.pushNamed(context, '/all-hotels');
+                            },
+                            child: const Text(
+                              'See all',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -304,23 +311,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: Row(
                                 children: [
                                   Expanded(
-                                    child: _hotelCard(
-                                      rowHotels[0].imageUrl ?? '',
-                                      rowHotels[0].hotelName,
-                                      rowHotels[0].rating.toString(),
-                                      rowHotels[0].city,
-                                      rowHotels[0].price,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (rowHotels[0].hotelId != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  HotelDetailsPage(
+                                                    hotelId:
+                                                        rowHotels[0].hotelId!,
+                                                  ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      child: _hotelCard(
+                                        rowHotels[0].imageUrl ?? '',
+                                        rowHotels[0].hotelName,
+                                        rowHotels[0].rating.toString(),
+                                        rowHotels[0].city,
+                                        rowHotels[0].price,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   if (rowHotels.length > 1)
                                     Expanded(
-                                      child: _hotelCard(
-                                        rowHotels[1].imageUrl ?? '',
-                                        rowHotels[1].hotelName,
-                                        rowHotels[1].rating.toString(),
-                                        rowHotels[1].city,
-                                        rowHotels[1].price,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          if (rowHotels[1].hotelId != null) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    HotelDetailsPage(
+                                                      hotelId:
+                                                          rowHotels[1].hotelId!,
+                                                    ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        child: _hotelCard(
+                                          rowHotels[1].imageUrl ?? '',
+                                          rowHotels[1].hotelName,
+                                          rowHotels[1].rating.toString(),
+                                          rowHotels[1].city,
+                                          rowHotels[1].price,
+                                        ),
                                       ),
                                     )
                                   else
