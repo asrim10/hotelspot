@@ -11,6 +11,6 @@ class HiveTableConstant {
   static const int authTypeId = 1;
   static const String authTable = 'auth_table';
 
-  static const int bookingId = 1;
+  static const int bookingId = 2;
   static const String bookingTable = 'auth_table';
 }
