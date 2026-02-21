@@ -3,6 +3,7 @@ import 'package:hive/hive.dart';
 import 'package:hotelspot/core/constants/hive_table_constant.dart';
 import 'package:hotelspot/features/auth/data/models/auth_hive_model.dart';
 import 'package:hotelspot/features/booking/data/models/booking_hive_model.dart';
+import 'package:hotelspot/features/favourites/data/models/favourite_hive_model.dart';
 import 'package:path_provider/path_provider.dart';
 
 final hiveServiceProvider = Provider<HiveService>((ref) {
@@ -26,12 +27,16 @@ class HiveService {
     if (!Hive.isAdapterRegistered(HiveTableConstant.bookingId)) {
       Hive.registerAdapter(BookingHiveModelAdapter());
     }
+    if (!Hive.isAdapterRegistered(HiveTableConstant.favouriteId)) {
+      Hive.registerAdapter(FavouriteHiveModelAdapter());
+    }
   }
 
   // Open all boxes
   Future<void> _openBoxes() async {
     await Hive.openBox<AuthHiveModel>(HiveTableConstant.authTable);
     await Hive.openBox<BookingHiveModel>(HiveTableConstant.bookingTable);
+    await Hive.openBox<FavouriteHiveModel>(HiveTableConstant.favouriteTable);
   }
 
   // Close all boxes
@@ -218,5 +223,60 @@ class HiveService {
   // Clear all bookings (for testing/debugging)
   Future<void> clearAllBookings() async {
     await _bookingBox.clear();
+  }
+
+  // =============== Favourite CRUD Operations ====================
+
+  // Get favourite box
+  Box<FavouriteHiveModel> get _favouriteBox =>
+      Hive.box<FavouriteHiveModel>(HiveTableConstant.favouriteTable);
+
+  // Add to Favourites
+  Future<FavouriteHiveModel> addToFavourites(
+    FavouriteHiveModel favourite,
+  ) async {
+    await _favouriteBox.put(favourite.favouriteId, favourite);
+    return favourite;
+  }
+
+  // Get My Favourites
+  Future<List<FavouriteHiveModel>> getMyFavourites(String userId) async {
+    final favourites = _favouriteBox.values
+        .where((fav) => fav.userId == userId)
+        .toList();
+
+    favourites.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
+
+    return favourites;
+  }
+
+  // Remove by Favourite ID
+  Future<bool> removeFromFavourites(String favouriteId) async {
+    if (_favouriteBox.containsKey(favouriteId)) {
+      await _favouriteBox.delete(favouriteId);
+      return true;
+    }
+    return false;
+  }
+
+  // Remove by Hotel ID
+  Future<bool> removeByHotelId(String userId, String hotelId) async {
+    try {
+      final fav = _favouriteBox.values.firstWhere(
+        (fav) => fav.userId == userId && fav.hotelId == hotelId,
+      );
+
+      await _favouriteBox.delete(fav.favouriteId);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Check if Hotel is Favourited
+  bool isHotelFavourited(String userId, String hotelId) {
+    return _favouriteBox.values.any(
+      (fav) => fav.userId == userId && fav.hotelId == hotelId,
+    );
   }
 }
