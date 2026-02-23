@@ -36,7 +36,7 @@ class _BottomNavigationWidgetState extends State<BottomNavigationWidget> {
         Icon(Icons.home, size: 28, color: Colors.white),
         Icon(Icons.favorite, size: 28, color: Colors.white),
         Icon(Icons.add, size: 28, color: Colors.white),
-        Icon(Icons.location_on, size: 28, color: Colors.white),
+        Icon(Icons.history, size: 28, color: Colors.white),
         Icon(Icons.person, size: 28, color: Colors.white),
       ],
       onTap: (navBarIndex) {
