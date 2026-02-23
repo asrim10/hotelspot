@@ -1,9 +1,15 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/api/api_endpoints.dart';
+import 'package:hotelspot/features/favourites/domain/entities/favourite_entity.dart';
+import 'package:hotelspot/features/favourites/presentation/view_model/favourite_viewmodel.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:hotelspot/features/booking/presentation/pages/booking_page.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HotelDetailsPage extends ConsumerStatefulWidget {
   final String hotelId;
@@ -14,25 +20,184 @@ class HotelDetailsPage extends ConsumerStatefulWidget {
   ConsumerState<HotelDetailsPage> createState() => _HotelDetailsPageState();
 }
 
-class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
+class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage>
+    with SingleTickerProviderStateMixin {
   int _currentImageIndex = 0;
   bool _isFavorite = false;
+  String? _currentUserId;
+
+  // Shake detection
+  static const double _shakeThreshold = 15.0;
+  static const int _shakeTimeoutMs = 1000; // cooldown between shakes
+  double _lastX = 0, _lastY = 0, _lastZ = 0;
+  int _lastShakeTime = 0;
+  bool _shakeListenerActive = false;
+
+  // Heart animation controller
+  late AnimationController _heartAnimController;
+  late Animation<double> _heartScaleAnim;
+  bool _showHeartBurst = false;
 
   @override
   void initState() {
     super.initState();
-    // Fetch hotel details when page loads
-    Future.microtask(() {
+
+    // Heart burst animation
+    _heartAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _heartScaleAnim =
+        TweenSequence([
+          TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.8), weight: 40),
+          TweenSequenceItem(tween: Tween(begin: 1.8, end: 0.0), weight: 60),
+        ]).animate(
+          CurvedAnimation(parent: _heartAnimController, curve: Curves.easeOut),
+        );
+
+    Future.microtask(() async {
       ref.read(hotelViewmodelProvider.notifier).getHotelById(widget.hotelId);
+      // Load current user ID
+      final prefs = await SharedPreferences.getInstance();
+      _currentUserId = prefs.getString('user_id') ?? '';
+      // Check if already favourited
+      final favState = ref.read(favouriteViewModelProvider);
+      final alreadyFav = favState.favourites.any(
+        (f) => f.hotelId == widget.hotelId,
+      );
+      if (mounted) setState(() => _isFavorite = alreadyFav);
     });
+
+    _startShakeDetection();
+  }
+
+  void _startShakeDetection() {
+    if (_shakeListenerActive) return;
+    _shakeListenerActive = true;
+
+    accelerometerEventStream().listen((AccelerometerEvent event) {
+      if (!mounted) return;
+
+      final double x = event.x;
+      final double y = event.y;
+      final double z = event.z;
+
+      final double deltaX = (x - _lastX).abs();
+      final double deltaY = (y - _lastY).abs();
+      final double deltaZ = (z - _lastZ).abs();
+
+      final double magnitude = sqrt(
+        deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ,
+      );
+
+      _lastX = x;
+      _lastY = y;
+      _lastZ = z;
+
+      final int now = DateTime.now().millisecondsSinceEpoch;
+
+      if (magnitude > _shakeThreshold &&
+          (now - _lastShakeTime) > _shakeTimeoutMs) {
+        _lastShakeTime = now;
+        _onShakeDetected();
+      }
+    });
+  }
+
+  void _onShakeDetected() {
+    if (!_isFavorite) {
+      _toggleFavourite();
+    } else {
+      // Already favourited — just show a reminder snackbar
+      _showSnackBar(
+        message: '❤️ Already in your favourites!',
+        color: const Color(0xFF485D88),
+      );
+    }
+  }
+
+  Future<void> _toggleFavourite() async {
+    final favNotifier = ref.read(favouriteViewModelProvider.notifier);
+
+    if (_isFavorite) {
+      // Remove
+      final favState = ref.read(favouriteViewModelProvider);
+      final fav = favState.favourites.firstWhere(
+        (f) => f.hotelId == widget.hotelId,
+        orElse: () => FavouriteEntity(
+          userId: _currentUserId ?? '',
+          hotelId: widget.hotelId,
+        ),
+      );
+      if (fav.favouriteId != null) {
+        await favNotifier.removeFromFavourites(fav.favouriteId!);
+        setState(() => _isFavorite = false);
+        _showSnackBar(
+          message: '💔 Removed from favourites',
+          color: Colors.grey[700]!,
+        );
+      }
+    } else {
+      // Add
+      await favNotifier.addToFavourites(
+        FavouriteEntity(userId: _currentUserId ?? '', hotelId: widget.hotelId),
+      );
+      setState(() => _isFavorite = true);
+      _triggerHeartBurst();
+      _showSnackBar(
+        message: '❤️ Added to favourites! Shake to save next time!',
+        color: const Color(0xFF6C5CC4),
+      );
+    }
+  }
+
+  void _triggerHeartBurst() {
+    setState(() => _showHeartBurst = true);
+    _heartAnimController.forward(from: 0).then((_) {
+      if (mounted) setState(() => _showHeartBurst = false);
+    });
+  }
+
+  void _showSnackBar({required String message, required Color color}) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.favorite, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 90),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _heartAnimController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final hotelState = ref.watch(hotelViewmodelProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E21),
-
       body: hotelState.status == HotelStatus.loading
           ? const Center(child: CircularProgressIndicator(color: Colors.orange))
           : hotelState.status == HotelStatus.error
@@ -49,11 +214,9 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      ref
-                          .read(hotelViewmodelProvider.notifier)
-                          .getHotelById(widget.hotelId);
-                    },
+                    onPressed: () => ref
+                        .read(hotelViewmodelProvider.notifier)
+                        .getHotelById(widget.hotelId),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -70,7 +233,20 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
               children: [
                 _buildHotelContent(hotelState),
 
-                // BOOK NOW BUTTON FIXED AT BOTTOM
+                // Heart burst animation overlay
+                if (_showHeartBurst)
+                  Center(
+                    child: ScaleTransition(
+                      scale: _heartScaleAnim,
+                      child: const Icon(
+                        Icons.favorite,
+                        color: Colors.redAccent,
+                        size: 120,
+                      ),
+                    ),
+                  ),
+
+                // BOOK NOW BUTTON
                 Positioned(
                   bottom: 20,
                   left: 20,
@@ -102,10 +278,7 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                             ),
                             onPressed: () {
                               final hotel = hotelState.selectedHotel;
-
                               if (hotel == null) return;
-
-                              // Navigate to booking page
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -135,18 +308,14 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
 
   Widget _buildHotelContent(HotelState hotelState) {
     final hotel = hotelState.selectedHotel!;
-
-    // Fix image URL - remove /api/v1 from base URL (same as AllHotelsPage)
     final baseUrl = ApiEndpoints.baseUrl.replaceAll('/api/v1', '');
     final String? fullImageUrl = (hotel.imageUrl ?? '').isNotEmpty
         ? '$baseUrl${hotel.imageUrl}'
         : null;
-
     final List<String> hotelImages = fullImageUrl != null ? [fullImageUrl] : [];
 
     return CustomScrollView(
       slivers: [
-        // App Bar with Image Carousel
         SliverAppBar(
           expandedHeight: 400,
           pinned: true,
@@ -156,45 +325,55 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
-            IconButton(
-              icon: Icon(
-                _isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: Colors.white,
+            // Shake hint tooltip
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Tooltip(
+                message: 'Shake to favourite!',
+                child: Icon(
+                  Icons.vibration,
+                  color: Colors.white.withOpacity(0.5),
+                  size: 18,
+                ),
               ),
-              onPressed: () {
-                setState(() {
-                  _isFavorite = !_isFavorite;
-                });
-              },
+            ),
+            // Favourite button
+            IconButton(
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, anim) =>
+                    ScaleTransition(scale: anim, child: child),
+                child: Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  key: ValueKey(_isFavorite),
+                  color: _isFavorite ? Colors.redAccent : Colors.white,
+                ),
+              ),
+              onPressed: _toggleFavourite,
             ),
           ],
           flexibleSpace: FlexibleSpaceBar(
             background: Stack(
               fit: StackFit.expand,
               children: [
-                // Image Carousel
                 hotelImages.isNotEmpty
                     ? PageView.builder(
                         itemCount: hotelImages.length,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _currentImageIndex = index;
-                          });
-                        },
+                        onPageChanged: (index) =>
+                            setState(() => _currentImageIndex = index),
                         itemBuilder: (context, index) {
                           return Image.network(
                             hotelImages[index],
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey[800],
-                                child: const Icon(
-                                  Icons.hotel,
-                                  size: 100,
-                                  color: Colors.white38,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: Colors.grey[800],
+                                  child: const Icon(
+                                    Icons.hotel,
+                                    size: 100,
+                                    color: Colors.white38,
+                                  ),
                                 ),
-                              );
-                            },
                             loadingBuilder: (context, child, loadingProgress) {
                               if (loadingProgress == null) return child;
                               return Container(
@@ -236,7 +415,7 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                     ),
                   ),
                 ),
-                // Rating Badge
+                // Rating badge
                 Positioned(
                   top: 120,
                   left: 20,
@@ -254,12 +433,37 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                         const Icon(Icons.star, color: Colors.amber, size: 18),
                         const SizedBox(width: 4),
                         Text(
-                          '${hotel.rating.toStringAsFixed(1)}',
+                          hotel.rating.toStringAsFixed(1),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Shake hint badge
+                Positioned(
+                  top: 120,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.55),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.vibration, color: Colors.white70, size: 14),
+                        SizedBox(width: 4),
+                        Text(
+                          'Shake to ❤️',
+                          style: TextStyle(color: Colors.white70, fontSize: 11),
                         ),
                       ],
                     ),
@@ -293,7 +497,6 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
             ),
           ),
         ),
-        // Content
         SliverList(
           delegate: SliverChildListDelegate([
             Padding(
@@ -301,7 +504,6 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hotel Name and Price
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,10 +529,13 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Location
                   Row(
                     children: [
-                      Icon(Icons.location_on, size: 16, color: Colors.white60),
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.white60,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${hotel.city}, ${hotel.country}',
@@ -342,7 +547,6 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // Description
                   Text(
                     hotel.description ??
                         'The hotel offers comfortable accommodations and rooms are equipped with modern facilities',
@@ -353,14 +557,12 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Info Cards Row
                   Row(
                     children: [
                       Expanded(
                         child: _buildInfoCard(
                           title: 'COST',
-                          value:
-                              '${(hotel.price * 1000).toStringAsFixed(0)} NRs',
+                          value: '${(hotel.price).toStringAsFixed(0)} NRs',
                           subtitle: 'NIGHT',
                           icon: Icons.attach_money,
                         ),
@@ -386,7 +588,6 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  // Amenities Section
                   const Text(
                     'Amenities',
                     style: TextStyle(
@@ -409,7 +610,6 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  // Location Section
                   const Text(
                     'Location',
                     style: TextStyle(

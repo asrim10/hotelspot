@@ -77,6 +77,11 @@ dependencies:
   cached_network_image: ^3.4.1
   video_thumbnail: ^0.5.6
 
+  # Sensor packages
+  sensors_plus: ^6.1.1
+  proximity_sensor: ^1.0.5
+  light_sensor: ^3.0.1
+
   # Test
   test_cov_console: ^0.2.2
   hooks_riverpod: ^3.0.3
