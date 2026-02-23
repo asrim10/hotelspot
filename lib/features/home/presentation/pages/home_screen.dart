@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/api/api_endpoints.dart';
+import 'package:hotelspot/features/favourites/domain/entities/favourite_entity.dart';
+import 'package:hotelspot/features/favourites/presentation/state/favourite_state.dart';
+import 'package:hotelspot/features/favourites/presentation/view_model/favourite_viewmodel.dart';
+import 'package:hotelspot/features/hotel/domain/entities/hotel_entity.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:hotelspot/features/hotel/presentation/pages/hotel_details_page.dart';
 import 'package:hotelspot/features/hotel/presentation/pages/all_hotels_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -19,12 +24,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const Color cardPurple = Color(0xFF485D88);
   static const Color priceBlue = Color(0xFF1E90FF);
 
+  String? _currentUserId;
+
   @override
   void initState() {
     super.initState();
-    // Fetch hotels when screen loads
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(hotelViewmodelProvider.notifier).getAllHotels();
+      // Load favourites for current user
+      ref.read(favouriteViewModelProvider.notifier).getMyFavourites('me');
+      // Get current user ID from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('user_id') ?? '';
+      if (mounted) setState(() => _currentUserId = userId);
     });
   }
 
@@ -32,6 +44,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final hotelState = ref.watch(hotelViewmodelProvider);
     final hotels = hotelState.hotels;
+    final favouriteState = ref.watch(favouriteViewModelProvider);
+    final favouriteHotelIds = favouriteState.favourites
+        .map((f) => f.hotelId)
+        .toSet();
 
     return Scaffold(
       backgroundColor: topLeft,
@@ -243,7 +259,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Navigate to see all hotels
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -265,7 +280,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                       const SizedBox(height: 12),
 
-                      // Show loading, error, or hotels
                       if (hotelState.status == HotelStatus.loading)
                         const Center(
                           child: Padding(
@@ -297,7 +311,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         )
                       else
-                        // Display hotels in a grid (2 columns)
                         Column(
                           children: List.generate((hotels.length / 2).ceil(), (
                             rowIndex,
@@ -333,11 +346,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         }
                                       },
                                       child: _hotelCard(
-                                        rowHotels[0].imageUrl ?? '',
-                                        rowHotels[0].hotelName,
-                                        rowHotels[0].rating.toString(),
-                                        rowHotels[0].city,
-                                        rowHotels[0].price,
+                                        rowHotels[0],
+                                        favouriteHotelIds,
+                                        _currentUserId,
+                                        ref,
                                       ),
                                     ),
                                   ),
@@ -360,11 +372,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           }
                                         },
                                         child: _hotelCard(
-                                          rowHotels[1].imageUrl ?? '',
-                                          rowHotels[1].hotelName,
-                                          rowHotels[1].rating.toString(),
-                                          rowHotels[1].city,
-                                          rowHotels[1].price,
+                                          rowHotels[1],
+                                          favouriteHotelIds,
+                                          _currentUserId,
+                                          ref,
                                         ),
                                       ),
                                     )
@@ -424,15 +435,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   static Widget _hotelCard(
-    String imageUrl,
-    String title,
-    String rating,
-    String location,
-    double price,
+    dynamic hotel,
+    Set<String> favouriteHotelIds,
+    String? currentUserId,
+    WidgetRef ref,
   ) {
+    const Color priceBlue = Color(0xFF1E90FF);
     final baseUrl = ApiEndpoints.baseUrl.replaceAll('/api/v1', '');
-
+    final imageUrl = hotel.imageUrl ?? '';
     final fullImageUrl = imageUrl.isNotEmpty ? '$baseUrl$imageUrl' : '';
+    final isFavourited =
+        hotel.hotelId != null && favouriteHotelIds.contains(hotel.hotelId);
 
     return Container(
       height: 260,
@@ -460,7 +473,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             child: Stack(
               children: [
-                // Image
                 if (fullImageUrl.isNotEmpty)
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
@@ -504,23 +516,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
 
+                // ❤️ Favourite toggle button
                 Positioned(
                   top: 8,
                   left: 8,
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.favorite_border,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+                  child: _FavouriteButton(
+                    isFavourited: isFavourited,
+                    onTap: () async {
+                      if (hotel.hotelId == null) return;
+
+                      final favNotifier = ref.read(
+                        favouriteViewModelProvider.notifier,
+                      );
+
+                      if (isFavourited) {
+                        // Find the favourite entity to get its ID
+                        final favState = ref.read(favouriteViewModelProvider);
+                        final fav = favState.favourites.firstWhere(
+                          (f) => f.hotelId == hotel.hotelId,
+                          orElse: () => FavouriteEntity(
+                            userId: currentUserId ?? '',
+                            hotelId: hotel.hotelId!,
+                          ),
+                        );
+                        if (fav.favouriteId != null) {
+                          await favNotifier.removeFromFavourites(
+                            fav.favouriteId!,
+                          );
+                        }
+                      } else {
+                        await favNotifier.addToFavourites(
+                          FavouriteEntity(
+                            userId: currentUserId ?? '',
+                            hotelId: hotel.hotelId!,
+                          ),
+                        );
+                      }
+                    },
                   ),
                 ),
+
                 Positioned(
                   top: 8,
                   right: 8,
@@ -534,7 +569,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'NRs.${price.toStringAsFixed(0)}',
+                      'NRs.${(hotel.price as double).toStringAsFixed(0)}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -550,7 +585,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
             child: Text(
-              title,
+              hotel.hotelName,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -563,13 +598,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 const Icon(Icons.star, color: Colors.amber, size: 14),
                 const SizedBox(width: 6),
-                Text(rating, style: const TextStyle(fontSize: 12)),
+                Text(
+                  hotel.rating.toString(),
+                  style: const TextStyle(fontSize: 12),
+                ),
                 const Spacer(),
                 const Icon(Icons.location_on, size: 14, color: Colors.grey),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    location,
+                    hotel.city,
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -591,10 +629,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 const Icon(Icons.star, color: Colors.amber, size: 14),
                 const SizedBox(width: 6),
-                Text(rating, style: const TextStyle(fontSize: 13)),
+                Text(
+                  hotel.rating.toString(),
+                  style: const TextStyle(fontSize: 13),
+                ),
                 const Spacer(),
                 Text(
-                  'NRs.${price.toStringAsFixed(0)}',
+                  'NRs.${(hotel.price as double).toStringAsFixed(0)}',
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -604,6 +645,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Animated favourite heart button
+class _FavouriteButton extends StatefulWidget {
+  final bool isFavourited;
+  final VoidCallback onTap;
+
+  const _FavouriteButton({required this.isFavourited, required this.onTap});
+
+  @override
+  State<_FavouriteButton> createState() => _FavouriteButtonState();
+}
+
+class _FavouriteButtonState extends State<_FavouriteButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      lowerBound: 0.8,
+      upperBound: 1.0,
+      value: 1.0,
+    );
+    _scale = _controller;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleTap() async {
+    await _controller.reverse();
+    widget.onTap();
+    await _controller.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: ScaleTransition(
+        scale: _scale,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: widget.isFavourited
+                ? Colors.red.withOpacity(0.85)
+                : Colors.white.withOpacity(0.22),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            widget.isFavourited ? Icons.favorite : Icons.favorite_border,
+            color: Colors.white,
+            size: 18,
+          ),
+        ),
       ),
     );
   }
