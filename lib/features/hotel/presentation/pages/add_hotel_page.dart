@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hotelspot/core/utils/snackbar_utils.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:image_picker/image_picker.dart';
@@ -36,10 +35,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
 
   Future<bool> _userPermission(Permission permission) async {
     final status = await permission.status;
-    if (status.isGranted) {
-      return true;
-    }
-
+    if (status.isGranted) return true;
     if (status.isDenied) {
       final result = await permission.request();
       return result.isGranted;
@@ -51,7 +47,6 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
     return false;
   }
 
-  //code for camera
   Future<void> _cameraPicture() async {
     final hasPermission = await _userPermission(Permission.camera);
     if (!hasPermission) return;
@@ -66,15 +61,15 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
         _selectedMedia.clear();
         _selectedMedia.add(photo);
       });
-
-      // Upload image to server and store the URL
       await _uploadImageToServer(File(photo.path));
     }
   }
 
-  //code for gallery
   Future<void> _pickFromGallery({bool allowMultiple = false}) async {
     try {
+      final hasPermission = await _userPermission(Permission.photos);
+      if (!hasPermission) return;
+
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
@@ -85,53 +80,26 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
           _selectedMedia.clear();
           _selectedMedia.add(image);
         });
-
-        // Upload image to server and store the URL
         await _uploadImageToServer(File(image.path));
       }
-    } on PlatformException catch (e) {
-      debugPrint("Gallery PlatformException: $e");
-      if (e.code == 'photo_access_denied') {
-        if (mounted) {
-          SnackbarUtils.showError(
-            context,
-            "Please grant photo library access in settings",
-          );
-        }
-      }
     } catch (e) {
-      debugPrint("Gallery Error: $e");
-      // Only show error if it's actually a permission issue
-      if (e.toString().contains('permission') ||
-          e.toString().contains('denied')) {
-        if (mounted) {
-          SnackbarUtils.showError(
-            context,
-            "Could not access your gallery, Please check permissions",
-          );
-        }
-      }
+      _showPermissionDeniedDialog();
     }
   }
 
-  // New method to upload image and store the URL
   Future<void> _uploadImageToServer(File imageFile) async {
-    setState(() {
-      _isUploadingImage = true;
-    });
+    setState(() => _isUploadingImage = true);
 
     try {
       await ref.read(hotelViewmodelProvider.notifier).uploadImage(imageFile);
 
-      // Get the uploaded image URL from state
       final state = ref.read(hotelViewmodelProvider);
 
       if (state.status == HotelStatus.loaded && state.uploadImageName != null) {
         setState(() {
-          _uploadedImageUrl = state.uploadImageName; // STORE IT HERE
+          _uploadedImageUrl = state.uploadImageName;
           _isUploadingImage = false;
         });
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -143,10 +111,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
           );
         }
       } else if (state.status == HotelStatus.error) {
-        setState(() {
-          _isUploadingImage = false;
-        });
-
+        setState(() => _isUploadingImage = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -158,10 +123,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
         }
       }
     } catch (e) {
-      setState(() {
-        _isUploadingImage = false;
-      });
-
+      setState(() => _isUploadingImage = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -174,7 +136,6 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
     }
   }
 
-  //code for video
   Future<void> _pickVideo() async {
     try {
       final hasPermission = await _userPermission(Permission.camera);
@@ -199,7 +160,6 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
     }
   }
 
-  //code for dialogBox: showDialog for menu
   Future<void> _pickMedia() async {
     showModalBottomSheet(
       context: context,
@@ -292,11 +252,8 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
         return;
       }
 
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
 
-      // Call viewmodel to create hotel
       await ref
           .read(hotelViewmodelProvider.notifier)
           .createHotel(
@@ -313,17 +270,13 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
             imageUrl: _uploadedImageUrl,
           );
 
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
 
       if (mounted) {
         final currentState = ref.read(hotelViewmodelProvider);
 
         if (currentState.status == HotelStatus.created) {
-          // Re-fetch so HomeScreen updates
           ref.read(hotelViewmodelProvider.notifier).getAllHotels();
-
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Hotel added successfully!'),
@@ -418,10 +371,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                               decoration: BoxDecoration(
                                 color: Colors.grey[100],
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.grey[300]!,
-                                  style: BorderStyle.solid,
-                                ),
+                                border: Border.all(color: Colors.grey[300]!),
                               ),
                               child: _isUploadingImage
                                   ? const Center(
@@ -448,8 +398,8 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                     ),
                             ),
                           ),
-                          // Selected Images
-                          if (_selectedMedia.isNotEmpty) ...[
+                          // Selected image preview
+                          if (_selectedMedia.isNotEmpty)
                             Stack(
                               children: [
                                 Container(
@@ -466,7 +416,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                     ),
                                   ),
                                 ),
-                                // Green checkmark
+                                // Green checkmark when uploaded
                                 if (_uploadedImageUrl != null)
                                   Positioned(
                                     bottom: 4,
@@ -484,7 +434,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                       ),
                                     ),
                                   ),
-                                // Close button
+                                // Remove button
                                 Positioned(
                                   top: 4,
                                   right: 16,
@@ -511,7 +461,6 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                 ),
                               ],
                             ),
-                          ],
                         ],
                       ),
                     ),
@@ -545,7 +494,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
 
               const SizedBox(height: 10),
 
-              // Basic Information Section
+              // Basic Information
               _buildSection(
                 title: 'Basic Information',
                 children: [
@@ -566,7 +515,6 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                     },
                   ),
                   const SizedBox(height: 20),
-
                   _buildLabel('Description'),
                   const SizedBox(height: 8),
                   _buildTextField(
@@ -576,7 +524,6 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                     maxLines: 4,
                   ),
                   const SizedBox(height: 20),
-
                   _buildLabel('Rating'),
                   const SizedBox(height: 8),
                   Container(
@@ -628,11 +575,8 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                 max: 5,
                                 divisions: 10,
                                 activeColor: const Color(0xFF1E88E5),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rating = value;
-                                  });
-                                },
+                                onChanged: (value) =>
+                                    setState(() => _rating = value),
                               ),
                             ],
                           ),
@@ -645,7 +589,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
 
               const SizedBox(height: 10),
 
-              // Location Section
+              // Location
               _buildSection(
                 title: 'Location',
                 children: [
@@ -666,7 +610,6 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                     },
                   ),
                   const SizedBox(height: 20),
-
                   Row(
                     children: [
                       Expanded(
@@ -683,9 +626,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                 if (value == null || value.isEmpty) {
                                   return 'Required';
                                 }
-                                if (value.length < 2) {
-                                  return 'Min 2 chars';
-                                }
+                                if (value.length < 2) return 'Min 2 chars';
                                 return null;
                               },
                             ),
@@ -707,9 +648,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
                                 if (value == null || value.isEmpty) {
                                   return 'Required';
                                 }
-                                if (value.length < 2) {
-                                  return 'Min 2 chars';
-                                }
+                                if (value.length < 2) return 'Min 2 chars';
                                 return null;
                               },
                             ),
@@ -723,7 +662,7 @@ class _AddHotelPageState extends ConsumerState<AddHotelPage> {
 
               const SizedBox(height: 10),
 
-              // Pricing & Availability Section
+              // Pricing & Availability
               _buildSection(
                 title: 'Pricing & Availability',
                 children: [
