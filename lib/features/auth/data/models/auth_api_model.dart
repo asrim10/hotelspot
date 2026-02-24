@@ -1,9 +1,5 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:hotelspot/features/auth/domain/entities/auth_entity.dart';
 
-part 'auth_api_model.g.dart';
-
-@JsonSerializable()
 class AuthApiModel {
   final String? id;
   final String fullName;
@@ -11,6 +7,7 @@ class AuthApiModel {
   final String username;
   final String? password;
   final String? confirmPassword;
+  final String? imageUrl;
 
   AuthApiModel({
     this.id,
@@ -19,40 +16,39 @@ class AuthApiModel {
     required this.username,
     this.password,
     this.confirmPassword,
+    this.imageUrl,
   });
 
-  // to JSON
   Map<String, dynamic> toJson() {
     return {
       'fullName': fullName,
-      "email": email,
-      "username": username,
-      "password": password,
-      "confirmPassword": confirmPassword,
+      'email': email,
+      'username': username,
+      'password': password,
+      'confirmPassword': confirmPassword,
     };
   }
 
-  //from Json
   factory AuthApiModel.fromJson(Map<String, dynamic> json) {
     return AuthApiModel(
-      id: json["_id"] as String,
-      fullName: json['fullName'] as String,
-      email: json["email"] as String,
-      username: json["username"] as String,
+      id: json['_id'] as String?,
+      fullName: json['fullName'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      username: json['username'] as String? ?? '',
+      imageUrl: json['imageUrl'] as String?,
     );
   }
 
-  //toEntity
   AuthEntity toEntity() {
     return AuthEntity(
       authId: id,
       fullName: fullName,
       email: email,
       username: username,
+      imageUrl: imageUrl,
     );
   }
 
-  //from Entity
   factory AuthApiModel.fromEntity(AuthEntity entity) {
     return AuthApiModel(
       fullName: entity.fullName,
@@ -60,10 +56,10 @@ class AuthApiModel {
       username: entity.username,
       password: entity.password,
       confirmPassword: entity.confirmPassword,
+      imageUrl: entity.imageUrl,
     );
   }
 
-  //toEntityList
   static List<AuthEntity> toEntityList(List<AuthApiModel> models) {
     return models.map((model) => model.toEntity()).toList();
   }

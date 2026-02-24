@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/api/api_client.dart';
 import 'package:hotelspot/core/api/api_endpoints.dart';
@@ -29,7 +32,6 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
 
   @override
   Future<AuthApiModel?> getUserById(String authId) {
-    // TODO: implement getUserById
     throw UnimplementedError();
   }
 
@@ -39,8 +41,8 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
       ApiEndpoints.login,
       data: {'email': email, 'password': password},
     );
-    if (response.data["success"] == true) {
-      final data = response.data["data"] as Map<String, dynamic>;
+    if (response.data['success'] == true) {
+      final data = response.data['data'] as Map<String, dynamic>;
       final user = AuthApiModel.fromJson(data);
 
       await _userSessionService.saveUserSession(
@@ -49,15 +51,14 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
         fullName: user.fullName,
         username: user.username,
       );
-      //save token
-      final token = response.data["token"];
+
+      final token = response.data['token'];
       if (token != null) {
-        await _tokenService.saveToken(token!);
+        await _tokenService.saveToken(token);
       }
 
       return user;
     }
-
     return null;
   }
 
@@ -68,11 +69,86 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
       data: user.toJson(),
     );
 
-    if (response.data["success"] == true) {
+    if (response.data['success'] == true) {
       final data = response.data['data'] as Map<String, dynamic>;
-      final registeredUser = AuthApiModel.fromJson(data);
-      return registeredUser;
+      return AuthApiModel.fromJson(data);
     }
+    return user;
+  }
+
+  @override
+  Future<AuthApiModel> getProfile() async {
+    final response = await _apiClient.get(ApiEndpoints.getProfile);
+    final data = response.data['data'] as Map<String, dynamic>;
+    final user = AuthApiModel.fromJson(data);
+
+    await _userSessionService.saveUserSession(
+      userId: user.id!,
+      email: user.email,
+      fullName: user.fullName,
+      username: user.username,
+    );
+
+    return user;
+  }
+
+  @override
+  Future<AuthApiModel> updateProfile({
+    String? fullName,
+    String? username,
+    String? phoneNumber,
+    File? image,
+  }) async {
+    final formData = FormData();
+
+    if (fullName != null) formData.fields.add(MapEntry('fullName', fullName));
+    if (username != null) formData.fields.add(MapEntry('username', username));
+    if (phoneNumber != null) {
+      formData.fields.add(MapEntry('phoneNumber', phoneNumber));
+    }
+    if (image != null) {
+      formData.files.add(
+        MapEntry(
+          'image',
+          await MultipartFile.fromFile(
+            image.path,
+            filename: image.path.split('/').last,
+          ),
+        ),
+      );
+    }
+
+    debugPrint('=== UPDATE PROFILE DEBUG ===');
+    debugPrint('image is null: ${image == null}');
+    debugPrint('image path: ${image?.path}');
+    debugPrint(
+      'formData fields: ${formData.fields.map((e) => '${e.key}=${e.value}').toList()}',
+    );
+    debugPrint('formData files: ${formData.files.map((f) => f.key).toList()}');
+
+    final response = await _apiClient.put(
+      ApiEndpoints.updateProfile,
+      data: formData,
+      options: Options(
+        contentType: 'multipart/form-data',
+        headers: {'Accept': 'application/json'},
+      ),
+    );
+
+    debugPrint('response data: ${response.data}');
+
+    final data = response.data['data'] as Map<String, dynamic>;
+    final user = AuthApiModel.fromJson(data);
+
+    debugPrint('parsed imageUrl: ${user.imageUrl}');
+
+    await _userSessionService.saveUserSession(
+      userId: user.id!,
+      email: user.email,
+      fullName: user.fullName,
+      username: user.username,
+    );
+
     return user;
   }
 }

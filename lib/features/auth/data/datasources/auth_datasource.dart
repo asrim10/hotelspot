@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:hotelspot/features/auth/data/models/auth_api_model.dart';
 import 'package:hotelspot/features/auth/data/models/auth_hive_model.dart';
 
@@ -13,4 +14,11 @@ abstract interface class IAuthRemoteDataSource {
   Future<AuthApiModel> register(AuthApiModel user);
   Future<AuthApiModel?> login(String email, String password);
   Future<AuthApiModel?> getUserById(String authId);
+  Future<AuthApiModel> getProfile();
+  Future<AuthApiModel> updateProfile({
+    String? fullName,
+    String? username,
+    String? phoneNumber,
+    File? image,
+  });
 }

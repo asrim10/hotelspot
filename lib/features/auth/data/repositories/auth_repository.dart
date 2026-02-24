@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,13 +13,10 @@ import 'package:hotelspot/features/auth/domain/entities/auth_entity.dart';
 import 'package:hotelspot/features/auth/domain/repositories/auth_repository.dart';
 
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
-  final authLocalDatasource = ref.read(authLocalDatasourceProvider);
-  final authRemoteDatasource = ref.read(authRemoteDatasourceProvider);
-  final networkInfo = ref.read(networkInfoProvider);
   return AuthRepository(
-    authLocalDatasource: authLocalDatasource,
-    authRemoteDatasource: authRemoteDatasource,
-    networkInfo: networkInfo,
+    authLocalDatasource: ref.read(authLocalDatasourceProvider),
+    authRemoteDatasource: ref.read(authRemoteDatasourceProvider),
+    networkInfo: ref.read(networkInfoProvider),
   );
 });
 
@@ -39,13 +37,10 @@ class AuthRepository implements IAuthRepository {
   Future<Either<Failure, AuthEntity>> getCurrentUser() async {
     try {
       final user = await _authLocalDatasource.getCurrentUser();
-      if (user != null) {
-        final entity = user.toEntity();
-        return Right(entity);
-      }
-      return (Left(LocalDatabaseFailure(message: 'No current user found')));
+      if (user != null) return Right(user.toEntity());
+      return Left(LocalDatabaseFailure(message: 'No current user found'));
     } catch (e) {
-      return (Left(LocalDatabaseFailure(message: e.toString())));
+      return Left(LocalDatabaseFailure(message: e.toString()));
     }
   }
 
@@ -57,15 +52,12 @@ class AuthRepository implements IAuthRepository {
     if (await _networkInfo.isConnected) {
       try {
         final apiModel = await _authRemoteDataSource.login(email, password);
-        if (apiModel != null) {
-          final entity = apiModel.toEntity();
-          return Right(entity);
-        }
-        return const Left(ApiFailure(message: "Invalid Credentials"));
+        if (apiModel != null) return Right(apiModel.toEntity());
+        return const Left(ApiFailure(message: 'Invalid Credentials'));
       } on DioException catch (e) {
         return Left(
           ApiFailure(
-            message: e.response?.data["message"] ?? "Login failed",
+            message: e.response?.data['message'] ?? 'Login failed',
             statusCode: e.response?.statusCode,
           ),
         );
@@ -75,15 +67,10 @@ class AuthRepository implements IAuthRepository {
     } else {
       try {
         final user = await _authLocalDatasource.login(email, password);
-        if (user != null) {
-          final entity = user.toEntity();
-          return Right(entity);
-        }
-        return (Left(
-          LocalDatabaseFailure(message: 'Invalid email or password'),
-        ));
+        if (user != null) return Right(user.toEntity());
+        return Left(LocalDatabaseFailure(message: 'Invalid email or password'));
       } catch (e) {
-        return (Left(LocalDatabaseFailure(message: e.toString())));
+        return Left(LocalDatabaseFailure(message: e.toString()));
       }
     }
   }
@@ -92,12 +79,10 @@ class AuthRepository implements IAuthRepository {
   Future<Either<Failure, bool>> logout() async {
     try {
       final result = await _authLocalDatasource.logout();
-      if (result) {
-        return Right(true);
-      }
-      return (Left(LocalDatabaseFailure(message: 'Failed to logout user')));
+      if (result) return const Right(true);
+      return Left(LocalDatabaseFailure(message: 'Failed to logout user'));
     } catch (e) {
-      return (Left(LocalDatabaseFailure(message: e.toString())));
+      return Left(LocalDatabaseFailure(message: e.toString()));
     }
   }
 
@@ -111,7 +96,7 @@ class AuthRepository implements IAuthRepository {
       } on DioException catch (e) {
         return Left(
           ApiFailure(
-            message: e.response?.data["message"] ?? "Registration failed",
+            message: e.response?.data['message'] ?? 'Registration failed',
             statusCode: e.response?.statusCode,
           ),
         );
@@ -120,16 +105,57 @@ class AuthRepository implements IAuthRepository {
       }
     } else {
       try {
-        //model ma convert gara
         final model = AuthHiveModel.fromEntity(user);
         final result = await _authLocalDatasource.register(model);
-        if (result) {
-          return Right(true);
-        }
-        return (Left(LocalDatabaseFailure(message: 'Failed to register user')));
+        if (result) return const Right(true);
+        return Left(LocalDatabaseFailure(message: 'Failed to register user'));
       } catch (e) {
-        return (Left(LocalDatabaseFailure(message: e.toString())));
+        return Left(LocalDatabaseFailure(message: e.toString()));
       }
+    }
+  }
+
+  @override
+  Future<Either<Failure, AuthEntity>> getProfile() async {
+    try {
+      final apiModel = await _authRemoteDataSource.getProfile();
+      return Right(apiModel.toEntity());
+    } on DioException catch (e) {
+      return Left(
+        ApiFailure(
+          message: e.response?.data['message'] ?? 'Failed to get profile',
+          statusCode: e.response?.statusCode,
+        ),
+      );
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AuthEntity>> updateProfile({
+    String? fullName,
+    String? username,
+    String? phoneNumber,
+    File? image,
+  }) async {
+    try {
+      final apiModel = await _authRemoteDataSource.updateProfile(
+        fullName: fullName,
+        username: username,
+        phoneNumber: phoneNumber,
+        image: image,
+      );
+      return Right(apiModel.toEntity());
+    } on DioException catch (e) {
+      return Left(
+        ApiFailure(
+          message: e.response?.data['message'] ?? 'Failed to update profile',
+          statusCode: e.response?.statusCode,
+        ),
+      );
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
     }
   }
 }

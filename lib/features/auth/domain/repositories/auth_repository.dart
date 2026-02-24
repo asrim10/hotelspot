@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:hotelspot/core/error/failures.dart';
 import 'package:hotelspot/features/auth/domain/entities/auth_entity.dart';
@@ -7,4 +8,11 @@ abstract interface class IAuthRepository {
   Future<Either<Failure, AuthEntity>> login(String email, String password);
   Future<Either<Failure, AuthEntity>> getCurrentUser();
   Future<Either<Failure, bool>> logout();
+  Future<Either<Failure, AuthEntity>> getProfile();
+  Future<Either<Failure, AuthEntity>> updateProfile({
+    String? fullName,
+    String? username,
+    String? phoneNumber,
+    File? image,
+  });
 }

@@ -33,6 +33,8 @@ class ApiEndpoints {
   static const String login = '/auth/login';
   static const String updateUser = '/auth/users';
   static const String deleteUser = '/auth/users';
+  static const String getProfile = '/auth/whoami';
+  static const String updateProfile = '/auth/update-profile';
 
   // Hotel endpoints
   static const String hotels = '/hotels';
