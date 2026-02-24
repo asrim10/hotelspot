@@ -11,6 +11,7 @@ class HotelEntity extends Equatable {
   final double rating;
   final String? description;
   final String? imageUrl;
+  final Map<String, double>? coordinates;
 
   const HotelEntity({
     this.hotelId,
@@ -23,6 +24,7 @@ class HotelEntity extends Equatable {
     required this.rating,
     this.description,
     this.imageUrl,
+    this.coordinates,
   });
 
   @override
@@ -37,5 +39,6 @@ class HotelEntity extends Equatable {
     rating,
     description,
     imageUrl,
+    coordinates,
   ];
 }

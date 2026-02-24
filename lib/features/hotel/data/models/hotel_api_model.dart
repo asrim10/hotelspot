@@ -3,6 +3,22 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'hotel_api_model.g.dart';
 
+class CoordinatesModel {
+  final double lat;
+  final double lng;
+
+  CoordinatesModel({required this.lat, required this.lng});
+
+  factory CoordinatesModel.fromJson(Map<String, dynamic> json) {
+    return CoordinatesModel(
+      lat: (json['lat'] as num).toDouble(),
+      lng: (json['lng'] as num).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {'lat': lat, 'lng': lng};
+}
+
 @JsonSerializable()
 class HotelApiModel {
   final String id;
@@ -15,6 +31,7 @@ class HotelApiModel {
   final double? rating;
   final String? description;
   final String? imageUrl;
+  final CoordinatesModel? coordinates; // added
 
   HotelApiModel({
     required this.id,
@@ -27,6 +44,7 @@ class HotelApiModel {
     this.rating,
     this.description,
     this.imageUrl,
+    this.coordinates,
   });
 
   factory HotelApiModel.fromJson(Map<String, dynamic> json) {
@@ -43,6 +61,9 @@ class HotelApiModel {
           : null,
       description: json['description'],
       imageUrl: json['imageUrl'],
+      coordinates: json['coordinates'] != null
+          ? CoordinatesModel.fromJson(json['coordinates'])
+          : null,
     );
   }
 
@@ -58,6 +79,7 @@ class HotelApiModel {
       'rating': rating,
       'description': description,
       'imageUrl': imageUrl,
+      'coordinates': coordinates?.toJson(),
     };
   }
 
@@ -73,6 +95,9 @@ class HotelApiModel {
       rating: rating ?? 0.0,
       description: description,
       imageUrl: imageUrl,
+      coordinates: coordinates != null
+          ? {'lat': coordinates!.lat, 'lng': coordinates!.lng}
+          : null,
     );
   }
 
@@ -88,10 +113,15 @@ class HotelApiModel {
       rating: entity.rating,
       description: entity.description,
       imageUrl: entity.imageUrl,
+      coordinates: entity.coordinates != null
+          ? CoordinatesModel(
+              lat: entity.coordinates!['lat']!,
+              lng: entity.coordinates!['lng']!,
+            )
+          : null,
     );
   }
 
-  //toEntityList
   static List<HotelEntity> toEntityList(List<HotelApiModel> models) {
     return models.map((model) => model.toEntity()).toList();
   }

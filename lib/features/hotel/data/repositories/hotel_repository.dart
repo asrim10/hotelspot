@@ -104,6 +104,7 @@ class HotelRepository implements IHotelRepository {
     if (await _networkInfo.isConnected) {
       try {
         final response = await _hotelRemoteDatasource.getHotelById(hotelId);
+
         final hotel = HotelEntity(
           hotelId: response['_id'],
           hotelName: response['hotelName'] ?? '',
@@ -115,7 +116,15 @@ class HotelRepository implements IHotelRepository {
           rating: (response['rating'] ?? 0).toDouble(),
           description: response['description'],
           imageUrl: response['imageUrl'],
+
+          coordinates: response['coordinates'] != null
+              ? {
+                  'lat': (response['coordinates']['lat'] as num).toDouble(),
+                  'lng': (response['coordinates']['lng'] as num).toDouble(),
+                }
+              : null,
         );
+
         return Right(hotel);
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));

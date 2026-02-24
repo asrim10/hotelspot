@@ -18,6 +18,10 @@ HotelApiModel _$HotelApiModelFromJson(Map<String, dynamic> json) =>
       rating: (json['rating'] as num?)?.toDouble(),
       description: json['description'] as String?,
       imageUrl: json['imageUrl'] as String?,
+      coordinates: json['coordinates'] == null
+          ? null
+          : CoordinatesModel.fromJson(
+              json['coordinates'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$HotelApiModelToJson(HotelApiModel instance) =>
@@ -32,4 +36,5 @@ Map<String, dynamic> _$HotelApiModelToJson(HotelApiModel instance) =>
       'rating': instance.rating,
       'description': instance.description,
       'imageUrl': instance.imageUrl,
+      'coordinates': instance.coordinates,
     };
