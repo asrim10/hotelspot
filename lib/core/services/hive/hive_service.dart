@@ -4,6 +4,7 @@ import 'package:hotelspot/core/constants/hive_table_constant.dart';
 import 'package:hotelspot/features/auth/data/models/auth_hive_model.dart';
 import 'package:hotelspot/features/booking/data/models/booking_hive_model.dart';
 import 'package:hotelspot/features/favourites/data/models/favourite_hive_model.dart';
+import 'package:hotelspot/features/hotel/data/models/hotel_hive_model.dart';
 import 'package:path_provider/path_provider.dart';
 
 final hiveServiceProvider = Provider<HiveService>((ref) {
@@ -25,6 +26,9 @@ class HiveService {
     if (!Hive.isAdapterRegistered(HiveTableConstant.authTypeId)) {
       Hive.registerAdapter(AuthHiveModelAdapter());
     }
+    if (!Hive.isAdapterRegistered(HiveTableConstant.hotelId)) {
+      Hive.registerAdapter(HotelHiveModelAdapter());
+    }
     if (!Hive.isAdapterRegistered(HiveTableConstant.bookingId)) {
       Hive.registerAdapter(BookingHiveModelAdapter());
     }
@@ -37,6 +41,7 @@ class HiveService {
     await Hive.openBox<AuthHiveModel>(HiveTableConstant.authTable);
     await Hive.openBox<BookingHiveModel>(HiveTableConstant.bookingTable);
     await Hive.openBox<FavouriteHiveModel>(HiveTableConstant.favouriteTable);
+    await Hive.openBox<HotelHiveModel>(HiveTableConstant.hotelTable);
   }
 
   Future<void> close() async {
@@ -81,8 +86,6 @@ class HiveService {
     }
   }
 
-  // Returns the Hive int key for a booking, found by matching bookingId field.
-  // Returns null if not found. Never does a hard cast — uses (is int) check.
   int? _getHiveKey(String bookingId) {
     for (final key in _bookingBox.keys) {
       if (key is! int) continue; // skip any corrupted non-int key
@@ -94,7 +97,6 @@ class HiveService {
     return null;
   }
 
-  // Finds a BookingHiveModel by its bookingId field value (not by box key)
   BookingHiveModel? _findByBookingId(String bookingId) {
     for (final key in _bookingBox.keys) {
       if (key is! int) continue;
@@ -107,9 +109,6 @@ class HiveService {
   }
 
   // Create Booking
-  // Uses add() so Hive assigns its own int key.
-  // If the booking already exists locally (e.g. synced from API twice),
-  // we update the existing entry to avoid duplicates.
   Future<BookingHiveModel> createBooking(BookingHiveModel booking) async {
     final existingKey = _getHiveKey(booking.bookingId);
     if (existingKey != null) {
@@ -307,4 +306,41 @@ class HiveService {
       (fav) => fav.userId == userId && fav.hotelId == hotelId,
     );
   }
+
+  // ======================= Hotel CRUD ===============================
+
+  Box<HotelHiveModel> get _hotelBox =>
+      Hive.box<HotelHiveModel>(HiveTableConstant.hotelTable);
+
+  /// Cache all hotels (bulk replace — called after a successful API fetch)
+  Future<void> cacheHotels(List<HotelHiveModel> hotels) async {
+    await _hotelBox.clear();
+    final map = {for (final h in hotels) h.hotelId: h};
+    await _hotelBox.putAll(map);
+  }
+
+  Future<List<HotelHiveModel>> getAllHotels() async {
+    return _hotelBox.values.toList();
+  }
+
+  HotelHiveModel? getHotelById(String hotelId) {
+    return _hotelBox.get(hotelId);
+  }
+
+  Future<HotelHiveModel> saveHotel(HotelHiveModel hotel) async {
+    await _hotelBox.put(hotel.hotelId, hotel);
+    return hotel;
+  }
+
+  Future<bool> deleteHotel(String hotelId) async {
+    if (_hotelBox.containsKey(hotelId)) {
+      await _hotelBox.delete(hotelId);
+      return true;
+    }
+    return false;
+  }
+
+  bool hotelExists(String hotelId) => _hotelBox.containsKey(hotelId);
+
+  Future<void> clearAllHotels() async => _hotelBox.clear();
 }
