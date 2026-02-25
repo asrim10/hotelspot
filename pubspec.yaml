@@ -93,6 +93,9 @@ dependencies:
   latlong2: ^0.9.1
   url_launcher: ^6.2.6
 
+  #payment
+  webview_flutter: ^4.13.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

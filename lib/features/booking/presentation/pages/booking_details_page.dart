@@ -7,6 +7,9 @@ import 'package:hotelspot/features/booking/presentation/pages/booking_confirmati
 import 'package:hotelspot/features/booking/presentation/state/booking_state.dart';
 import 'package:hotelspot/features/booking/presentation/view_model/booking_viewmodel.dart';
 import 'package:hotelspot/features/hotel/domain/entities/hotel_entity.dart';
+import 'package:hotelspot/features/payment/presentation/pages/khalti_webview_page.dart';
+import 'package:hotelspot/features/payment/presentation/state/payment_state.dart';
+import 'package:hotelspot/features/payment/presentation/view_model/payment_viewmodel.dart';
 
 class BookingDetailsPage extends ConsumerStatefulWidget {
   final HotelEntity hotel;
@@ -25,7 +28,7 @@ class BookingDetailsPage extends ConsumerStatefulWidget {
 }
 
 class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
-  Future<void> _submitBooking() async {
+  Future<void> _submitBooking(String paymentMethod) async {
     final userSessionService = ref.read(userSessionServiceProvider);
     final userId = userSessionService.getCurrentUserId();
     final fullName = userSessionService.getCurrentUserFullName();
@@ -43,7 +46,9 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
       return;
     }
 
-    // Create booking entity
+    final days = widget.checkOutDate.difference(widget.checkInDate).inDays;
+    final totalPrice = widget.hotel.price * days;
+
     final booking = BookingEntity(
       userId: userId,
       hotelId: widget.hotel.hotelId ?? '',
@@ -51,31 +56,79 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
       email: email,
       checkInDate: widget.checkInDate.toIso8601String().split('T')[0],
       checkOutDate: widget.checkOutDate.toIso8601String().split('T')[0],
-      totalPrice:
-          widget.hotel.price *
-          widget.checkOutDate.difference(widget.checkInDate).inDays,
+      totalPrice: totalPrice,
       status: 'pending',
-      paymentMethod: 'card',
+      paymentMethod: paymentMethod,
       paymentStatus: 'pending',
     );
 
-    // Call booking view model to create booking
+    // Step 1: Create booking
     await ref.read(bookingViewModelProvider.notifier).createBooking(booking);
+
+    final bookingState = ref.read(bookingViewModelProvider);
+    if (bookingState.status != BookingStatus.created) return;
+
+    final bookingId = bookingState.currentBooking?.bookingId;
+    if (bookingId == null) return;
+
+    // Step 2: If Khalti — initiate payment
+    if (paymentMethod == 'online') {
+      await ref
+          .read(paymentViewmodelProvider.notifier)
+          .initiatePayment(
+            bookingId: bookingId,
+            totalPrice: totalPrice,
+            fullName: fullName,
+            email: email,
+          );
+
+      final paymentState = ref.read(paymentViewmodelProvider);
+
+      if (paymentState.status == PaymentStatus.initiated &&
+          paymentState.paymentUrl != null) {
+        if (mounted) {
+          // Step 3: Open Khalti WebView
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => KhaltiWebViewPage(
+                paymentUrl: paymentState.paymentUrl!,
+                pidx: paymentState.pidx!,
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                paymentState.errorMessage ?? 'Failed to initiate payment',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+      return;
+    }
+
+    // Step 3: Cash — go to confirmation
+    if (mounted) {
+      final currentBooking = ref.read(bookingViewModelProvider).currentBooking;
+      if (currentBooking != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => BookingConfirmationPage(booking: currentBooking),
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Listen to booking state changes
     ref.listen<BookingState>(bookingViewModelProvider, (previous, next) {
-      if (next.status == BookingStatus.created) {
-        // Navigate to confirmation page
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) =>
-                BookingConfirmationPage(booking: next.currentBooking!),
-          ),
-        );
-      } else if (next.status == BookingStatus.error &&
+      if (next.status == BookingStatus.error &&
           previous?.status != BookingStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -95,9 +148,11 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
     final days = widget.checkOutDate.difference(widget.checkInDate).inDays;
     final totalAmount = widget.hotel.price * days;
 
-    // Watch booking state to show loading indicator
     final bookingState = ref.watch(bookingViewModelProvider);
-    final isProcessing = bookingState.status == BookingStatus.creating;
+    final paymentState = ref.watch(paymentViewmodelProvider);
+    final isProcessing =
+        bookingState.status == BookingStatus.creating ||
+        paymentState.status == PaymentStatus.loading;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E21),
@@ -115,7 +170,6 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title
               const Text(
                 'Booking Summary',
                 style: TextStyle(
@@ -136,7 +190,6 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    // Hotel Image
                     Container(
                       width: 100,
                       height: 100,
@@ -150,14 +203,13 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
                               child: Image.network(
                                 imageUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Center(
-                                      child: Icon(
-                                        Icons.hotel,
-                                        color: Colors.white38,
-                                        size: 40,
-                                      ),
-                                    ),
+                                errorBuilder: (_, __, ___) => const Center(
+                                  child: Icon(
+                                    Icons.hotel,
+                                    color: Colors.white38,
+                                    size: 40,
+                                  ),
+                                ),
                               ),
                             )
                           : const Center(
@@ -169,7 +221,6 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
                             ),
                     ),
                     const SizedBox(width: 16),
-                    // Hotel Info
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,7 +274,6 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
 
               const SizedBox(height: 32),
 
-              // Booking Details
               const Text(
                 'Booking Details',
                 style: TextStyle(
@@ -233,27 +283,19 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Check In
               _buildDetailRow(
                 label: 'Check In',
                 value: _formatDate(widget.checkInDate),
               ),
               const SizedBox(height: 16),
-
-              // Check Out
               _buildDetailRow(
                 label: 'Check Out',
                 value: _formatDate(widget.checkOutDate),
               ),
               const SizedBox(height: 16),
-
-              // Number of Days
               _buildDetailRow(label: 'Number of Days', value: '$days Days'),
-
               const SizedBox(height: 32),
 
-              // Price Breakdown
               const Text(
                 'Price Breakdown',
                 style: TextStyle(
@@ -263,13 +305,10 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Amount
               _buildPriceRow(
                 label: 'Amount',
                 value: 'NRs.${(widget.hotel.price * days).toStringAsFixed(0)}',
               ),
-
               const SizedBox(height: 20),
 
               // Total
@@ -310,19 +349,17 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
 
               const SizedBox(height: 40),
 
-              // Pay Now Button
+              // ✅ Pay with Khalti button
               GestureDetector(
-                onTap: isProcessing ? null : _submitBooking,
+                onTap: isProcessing ? null : () => _submitBooking('online'),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(25),
-                    gradient: LinearGradient(
-                      colors: isProcessing
-                          ? [Colors.grey[700]!, Colors.grey[600]!]
-                          : [const Color(0xFF2C73D2), const Color(0xFF845EC2)],
-                    ),
+                    color: isProcessing
+                        ? Colors.grey[700]
+                        : const Color(0xFF5C2D91), // Khalti purple
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.3),
@@ -344,7 +381,7 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
                             ),
                           )
                         : const Text(
-                            'PAY NOW',
+                            'PAY WITH KHALTI',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -352,6 +389,33 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
                               letterSpacing: 1,
                             ),
                           ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // ✅ Pay at Hotel (Cash) button
+              GestureDetector(
+                onTap: isProcessing ? null : () => _submitBooking('cash'),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(color: const Color(0xFF1E90FF)),
+                    color: Colors.transparent,
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'PAY AT HOTEL (CASH)',
+                      style: TextStyle(
+                        color: Color(0xFF1E90FF),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ),
                 ),
               ),

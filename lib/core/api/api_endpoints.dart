@@ -64,4 +64,9 @@ class ApiEndpoints {
   static const String myFavourites = '/favourites/me';
   static String favouriteById(String id) => '/favourites/$id';
   static String removeFavourite(String id) => '/favourites/$id';
+
+  //payment endpoints
+  static const String payments = '/payment';
+  static const String initiateKhaltiPayment = '/payment/khalti/initiate';
+  static const String verifyKhaltiPayment = '/payment/khalti/verify';
 }
