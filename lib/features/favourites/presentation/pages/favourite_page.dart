@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hotelspot/core/services/storage/user_session_service.dart';
 import 'package:hotelspot/features/favourites/domain/entities/favourite_entity.dart';
 import 'package:hotelspot/features/favourites/presentation/state/favourite_state.dart';
 import 'package:hotelspot/features/favourites/presentation/view_model/favourite_viewmodel.dart';
@@ -26,8 +27,10 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
   void initState() {
     super.initState();
     Future.microtask(() {
+      final userId =
+          ref.read(userSessionServiceProvider).getCurrentUserId() ?? '';
       ref.read(hotelViewmodelProvider.notifier).getAllHotels();
-      ref.read(favouriteViewModelProvider.notifier).getMyFavourites('me');
+      ref.read(favouriteViewModelProvider.notifier).getMyFavourites(userId);
     });
   }
 
@@ -133,9 +136,12 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
     if (favouriteState.status == FavouriteStatus.error) {
       return FavouritesErrorState(
         errorMessage: favouriteState.errorMessage,
-        cardPurple: const Color(0xFF485D88),
-        onRetry: () =>
-            ref.read(favouriteViewModelProvider.notifier).getMyFavourites('me'),
+        cardPurple: cardPurple,
+        onRetry: () {
+          final userId =
+              ref.read(userSessionServiceProvider).getCurrentUserId() ?? '';
+          ref.read(favouriteViewModelProvider.notifier).getMyFavourites(userId);
+        },
       );
     }
 

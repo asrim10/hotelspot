@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/error/failures.dart';
 import 'package:hotelspot/core/services/connectivity/network_info.dart';
+import 'package:hotelspot/core/services/storage/user_session_service.dart';
 import 'package:hotelspot/features/booking/data/datasources/booking_datasource.dart';
 import 'package:hotelspot/features/booking/data/datasources/local/booking_local_datasource.dart';
 import 'package:hotelspot/features/booking/data/datasources/remote/booking_remote_datasource.dart';
@@ -15,10 +16,12 @@ final bookingRepositoryProvider = Provider<IBookingRepository>((ref) {
   final bookingLocalDatasource = ref.read(bookingLocalDatasourceProvider);
   final bookingRemoteDatasource = ref.read(bookingRemoteDatasourceProvider);
   final networkInfo = ref.read(networkInfoProvider);
+  final userSessionService = ref.read(userSessionServiceProvider);
   return BookingRepository(
     bookingLocalDatasource: bookingLocalDatasource,
     bookingRemoteDatasource: bookingRemoteDatasource,
     networkInfo: networkInfo,
+    userSessionService: userSessionService,
   );
 });
 
@@ -26,14 +29,17 @@ class BookingRepository implements IBookingRepository {
   final IBookingLocalDataSource _bookingLocalDatasource;
   final IBookingRemoteDataSource _bookingRemoteDataSource;
   final NetworkInfo _networkInfo;
+  final UserSessionService _userSessionService;
 
   BookingRepository({
     required IBookingLocalDataSource bookingLocalDatasource,
     required IBookingRemoteDataSource bookingRemoteDatasource,
     required NetworkInfo networkInfo,
+    required UserSessionService userSessionService,
   }) : _bookingLocalDatasource = bookingLocalDatasource,
        _bookingRemoteDataSource = bookingRemoteDatasource,
-       _networkInfo = networkInfo;
+       _networkInfo = networkInfo,
+       _userSessionService = userSessionService;
 
   @override
   Future<Either<Failure, BookingEntity>> createBooking(
@@ -44,7 +50,7 @@ class BookingRepository implements IBookingRepository {
         final apiModel = BookingApiModel.fromEntity(booking);
         final result = await _bookingRemoteDataSource.createBooking(apiModel);
 
-        // Save to local database for offline access
+        // Cache to Hive
         final hiveModel = BookingHiveModel.fromEntity(result.toEntity());
         await _bookingLocalDatasource.createBooking(hiveModel);
 
@@ -76,7 +82,7 @@ class BookingRepository implements IBookingRepository {
       try {
         final bookings = await _bookingRemoteDataSource.getMyBookings();
 
-        // Save to local database for offline access
+        // Cache to Hive
         for (final booking in bookings) {
           final hiveModel = BookingHiveModel.fromEntity(booking.toEntity());
           await _bookingLocalDatasource.createBooking(hiveModel);
@@ -95,9 +101,8 @@ class BookingRepository implements IBookingRepository {
       }
     } else {
       try {
-        // Get userId from session - you'll need to implement this
-        // For now, passing empty string - update based on your session management
-        final bookings = await _bookingLocalDatasource.getMyBookings('');
+        final userId = _userSessionService.getCurrentUserId() ?? '';
+        final bookings = await _bookingLocalDatasource.getMyBookings(userId);
         return Right(BookingHiveModel.toEntityList(bookings));
       } catch (e) {
         return Left(LocalDatabaseFailure(message: e.toString()));
@@ -115,7 +120,7 @@ class BookingRepository implements IBookingRepository {
           bookingId,
         );
 
-        // Save to local database
+        // Cache to Hive
         final hiveModel = BookingHiveModel.fromEntity(booking.toEntity());
         await _bookingLocalDatasource.createBooking(hiveModel);
 
@@ -133,9 +138,7 @@ class BookingRepository implements IBookingRepository {
     } else {
       try {
         final booking = await _bookingLocalDatasource.getBookingById(bookingId);
-        if (booking != null) {
-          return Right(booking.toEntity());
-        }
+        if (booking != null) return Right(booking.toEntity());
         return const Left(LocalDatabaseFailure(message: 'Booking not found'));
       } catch (e) {
         return Left(LocalDatabaseFailure(message: e.toString()));
@@ -155,7 +158,7 @@ class BookingRepository implements IBookingRepository {
           reason,
         );
 
-        // Update local database
+        // Sync to Hive
         await _bookingLocalDatasource.cancelBooking(bookingId);
 
         return Right(result);
@@ -172,9 +175,7 @@ class BookingRepository implements IBookingRepository {
     } else {
       try {
         final booking = await _bookingLocalDatasource.cancelBooking(bookingId);
-        if (booking != null) {
-          return const Right(true);
-        }
+        if (booking != null) return const Right(true);
         return const Left(
           LocalDatabaseFailure(message: 'Failed to cancel booking'),
         );
@@ -196,7 +197,7 @@ class BookingRepository implements IBookingRepository {
           paymentStatus,
         );
 
-        // Update local database
+        // Sync to Hive
         final hiveModel = BookingHiveModel.fromEntity(booking.toEntity());
         await _bookingLocalDatasource.updateBooking(hiveModel);
 
@@ -219,9 +220,7 @@ class BookingRepository implements IBookingRepository {
           bookingId,
           paymentStatus,
         );
-        if (booking != null) {
-          return Right(booking.toEntity());
-        }
+        if (booking != null) return Right(booking.toEntity());
         return const Left(
           LocalDatabaseFailure(message: 'Failed to update payment status'),
         );
@@ -243,7 +242,7 @@ class BookingRepository implements IBookingRepository {
           paymentMethod,
         );
 
-        // Update local database
+        // Sync to Hive
         final hiveModel = BookingHiveModel.fromEntity(booking.toEntity());
         await _bookingLocalDatasource.updateBooking(hiveModel);
 
@@ -266,9 +265,7 @@ class BookingRepository implements IBookingRepository {
           bookingId,
           paymentMethod,
         );
-        if (booking != null) {
-          return Right(booking.toEntity());
-        }
+        if (booking != null) return Right(booking.toEntity());
         return const Left(
           LocalDatabaseFailure(message: 'Failed to update payment method'),
         );
@@ -290,7 +287,7 @@ class BookingRepository implements IBookingRepository {
           status,
         );
 
-        // Update local database
+        // Sync to Hive
         final hiveModel = BookingHiveModel.fromEntity(booking.toEntity());
         await _bookingLocalDatasource.updateBooking(hiveModel);
 
@@ -313,9 +310,7 @@ class BookingRepository implements IBookingRepository {
           bookingId,
           status,
         );
-        if (booking != null) {
-          return Right(booking.toEntity());
-        }
+        if (booking != null) return Right(booking.toEntity());
         return const Left(
           LocalDatabaseFailure(message: 'Failed to update booking status'),
         );
@@ -331,7 +326,7 @@ class BookingRepository implements IBookingRepository {
       try {
         final result = await _bookingRemoteDataSource.deleteBooking(bookingId);
 
-        // Delete from local database
+        // Remove from Hive
         await _bookingLocalDatasource.deleteBooking(bookingId);
 
         return Right(result);

@@ -25,9 +25,14 @@ class AuthLocalDatasource implements IAuthLocalDatasource {
        _userSessionService = userSessionService;
 
   @override
-  Future<AuthHiveModel?> getCurrentUser() {
-    // TODO: implement getCurrentUser
-    throw UnimplementedError();
+  Future<AuthHiveModel?> getCurrentUser() async {
+    try {
+      final userId = _userSessionService.getCurrentUserId();
+      if (userId == null) return null;
+      return _hiveService.getCurrentUser(userId);
+    } catch (e) {
+      return null;
+    }
   }
 
   @override
@@ -73,9 +78,16 @@ class AuthLocalDatasource implements IAuthLocalDatasource {
   Future<bool> register(AuthHiveModel model) async {
     try {
       await _hiveService.registerUser(model);
-      return Future.value(true);
+      // Also save session so getCurrentUser works
+      await _userSessionService.saveUserSession(
+        userId: model.authId!,
+        email: model.email,
+        fullName: model.fullName,
+        username: model.username,
+      );
+      return true;
     } catch (e) {
-      return Future.value(false);
+      return false;
     }
   }
 }

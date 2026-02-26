@@ -116,22 +116,41 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
+  @override
   Future<Either<Failure, AuthEntity>> getProfile() async {
-    try {
-      final apiModel = await _authRemoteDataSource.getProfile();
-      return Right(apiModel.toEntity());
-    } on DioException catch (e) {
-      return Left(
-        ApiFailure(
-          message: e.response?.data['message'] ?? 'Failed to get profile',
-          statusCode: e.response?.statusCode,
-        ),
-      );
-    } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+    if (await _networkInfo.isConnected) {
+      try {
+        final apiModel = await _authRemoteDataSource.getProfile();
+
+        // Cache to Hive
+        final hiveModel = AuthHiveModel.fromEntity(apiModel.toEntity());
+        await _authLocalDatasource.register(hiveModel);
+
+        return Right(apiModel.toEntity());
+      } on DioException catch (e) {
+        return Left(
+          ApiFailure(
+            message: e.response?.data['message'] ?? 'Failed to get profile',
+            statusCode: e.response?.statusCode,
+          ),
+        );
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    } else {
+      try {
+        final user = await _authLocalDatasource.getCurrentUser();
+        if (user != null) return Right(user.toEntity());
+        return const Left(
+          LocalDatabaseFailure(message: 'No cached profile found'),
+        );
+      } catch (e) {
+        return Left(LocalDatabaseFailure(message: e.toString()));
+      }
     }
   }
 
+  @override
   @override
   Future<Either<Failure, AuthEntity>> updateProfile({
     String? fullName,
@@ -139,23 +158,32 @@ class AuthRepository implements IAuthRepository {
     String? phoneNumber,
     File? image,
   }) async {
-    try {
-      final apiModel = await _authRemoteDataSource.updateProfile(
-        fullName: fullName,
-        username: username,
-        phoneNumber: phoneNumber,
-        image: image,
-      );
-      return Right(apiModel.toEntity());
-    } on DioException catch (e) {
-      return Left(
-        ApiFailure(
-          message: e.response?.data['message'] ?? 'Failed to update profile',
-          statusCode: e.response?.statusCode,
-        ),
-      );
-    } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+    if (await _networkInfo.isConnected) {
+      try {
+        final apiModel = await _authRemoteDataSource.updateProfile(
+          fullName: fullName,
+          username: username,
+          phoneNumber: phoneNumber,
+          image: image,
+        );
+
+        // Cache updated profile to Hive
+        final hiveModel = AuthHiveModel.fromEntity(apiModel.toEntity());
+        await _authLocalDatasource.register(hiveModel);
+
+        return Right(apiModel.toEntity());
+      } on DioException catch (e) {
+        return Left(
+          ApiFailure(
+            message: e.response?.data['message'] ?? 'Failed to update profile',
+            statusCode: e.response?.statusCode,
+          ),
+        );
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    } else {
+      return const Left(ApiFailure(message: 'No internet connection'));
     }
   }
 }
