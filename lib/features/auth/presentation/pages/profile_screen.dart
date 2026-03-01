@@ -133,17 +133,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         icon: Icons.edit_outlined,
                         label: 'Edit Profile',
                         onTap: () async {
+                          // No getProfile() after returning — viewmodel
+                          // already holds the updated state with bumped imageVersion
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => EditProfilePage(user: user),
                             ),
                           );
-                          if (context.mounted) {
-                            ref
-                                .read(authViewModelProvider.notifier)
-                                .getProfile();
-                          }
                         },
                       ),
                       _MenuItem(

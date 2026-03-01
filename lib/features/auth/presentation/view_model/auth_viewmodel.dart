@@ -91,6 +91,7 @@ class AuthViewModel extends Notifier<AuthState> {
       (authEntity) => state = state.copyWith(
         status: AuthStatus.profileLoaded,
         authEntity: authEntity,
+        imageVersion: state.imageVersion, // preserve version on re-fetch
       ),
     );
   }

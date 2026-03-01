@@ -1,4 +1,3 @@
-import 'package:equatable/equatable.dart';
 import 'package:hotelspot/features/auth/domain/entities/auth_entity.dart';
 
 enum AuthStatus {
@@ -14,11 +13,11 @@ enum AuthStatus {
   error,
 }
 
-class AuthState extends Equatable {
+class AuthState {
   final AuthStatus status;
   final AuthEntity? authEntity;
   final String? errorMessage;
-  final int imageVersion; // incremented on every successful profile update
+  final int imageVersion;
 
   const AuthState({
     this.status = AuthStatus.initial,
@@ -40,7 +39,4 @@ class AuthState extends Equatable {
       imageVersion: imageVersion ?? this.imageVersion,
     );
   }
-
-  @override
-  List<Object?> get props => [status, authEntity, errorMessage, imageVersion];
 }

@@ -25,6 +25,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _imagePicker = ImagePicker();
 
   File? _pickedImage;
+
   @override
   void initState() {
     super.initState();
@@ -45,13 +46,89 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final status = await Permission.photos.request();
+  void _showImagePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A2140),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Text(
+                'Choose Photo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFF0A0E21),
+                  child: Icon(Icons.camera_alt, color: Color(0xFF1E90FF)),
+                ),
+                title: const Text(
+                  'Take a Photo',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFF0A0E21),
+                  child: Icon(Icons.photo_library, color: Color(0xFF1E90FF)),
+                ),
+                title: const Text(
+                  'Choose from Gallery',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    // Request appropriate permission based on source
+    final permission = source == ImageSource.camera
+        ? Permission.camera
+        : Permission.photos;
+
+    final status = await permission.request();
     if (!status.isGranted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Photo permission required'),
+          SnackBar(
+            content: Text(
+              source == ImageSource.camera
+                  ? 'Camera permission required'
+                  : 'Photo permission required',
+            ),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
           ),
@@ -61,7 +138,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     }
 
     final picked = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
       imageQuality: 80,
     );
     if (picked != null) {
@@ -101,7 +178,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final state = ref.read(authViewModelProvider);
 
     if (state.status == AuthStatus.profileUpdated) {
-      // Evict from cache and bump version to force reload
       final oldUrl = _buildImageUrl(widget.user?.imageUrl);
       final newUrl = _buildImageUrl(state.authEntity?.imageUrl);
       if (oldUrl.isNotEmpty) await NetworkImage(oldUrl).evict();
@@ -164,8 +240,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             children: [
               const SizedBox(height: 12),
 
+              // Tap avatar to show bottom sheet
               GestureDetector(
-                onTap: _pickImage,
+                onTap: _showImagePickerSheet,
                 child: Stack(
                   children: [
                     Container(
