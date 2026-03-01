@@ -56,35 +56,36 @@ class _EditReviewSheetState extends ConsumerState<EditReviewSheet> {
           rating: _selectedRating.toDouble(),
           comment: _commentController.text.trim(),
         );
-
-    if (!mounted) return;
-    final state = ref.read(reviewViewmodelProvider);
-
-    if (state.status == ReviewStatus.updated) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Review updated!'),
-          backgroundColor: Color(0xFF00D084),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      ref.read(reviewViewmodelProvider.notifier).getMyReviews();
-    } else if (state.status == ReviewStatus.error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.errorMessage ?? 'Failed to update review'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isLoading =
         ref.watch(reviewViewmodelProvider).status == ReviewStatus.loading;
+
+    ref.listen<ReviewState>(reviewViewmodelProvider, (previous, next) {
+      if (next.status == ReviewStatus.updated &&
+          previous?.status != ReviewStatus.updated) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Review updated!'),
+            backgroundColor: Color(0xFF00D084),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        ref.read(reviewViewmodelProvider.notifier).getMyReviews();
+      } else if (next.status == ReviewStatus.error &&
+          previous?.status != ReviewStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage ?? 'Failed to update review'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
 
     return Container(
       decoration: const BoxDecoration(
