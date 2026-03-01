@@ -74,6 +74,17 @@ class _BookingHistoryPageState extends ConsumerState<BookingHistoryPage>
     }
   }
 
+  String? _resolveHotelName(String hotelId) {
+    try {
+      final hotelState = ref.watch(hotelViewmodelProvider);
+      return hotelState.hotels
+          .firstWhere((h) => h.hotelId == hotelId)
+          .hotelName;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bookingState = ref.watch(bookingViewModelProvider);
@@ -164,9 +175,11 @@ class _BookingHistoryPageState extends ConsumerState<BookingHistoryPage>
       itemBuilder: (context, index) {
         final booking = bookings[index];
         final imageUrl = _resolveImageUrl(booking.hotelId);
+        final hotelName = _resolveHotelName(booking.hotelId);
         return BookingCard(
           booking: booking,
           imageUrl: imageUrl,
+          hotelName: hotelName,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(

@@ -223,6 +223,7 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage>
             )
           : Stack(
               children: [
+                // Main scrollable content
                 HotelDetailsContent(
                   hotelState: hotelState,
                   isFavorite: _isFavorite,
@@ -230,6 +231,7 @@ class _HotelDetailsPageState extends ConsumerState<HotelDetailsPage>
                   onImagePageChanged: (index) =>
                       setState(() => _currentImageIndex = index),
                   onToggleFavourite: _toggleFavourite,
+                  hotelId: widget.hotelId, // ← passed here
                 ),
 
                 // Heart burst animation overlay

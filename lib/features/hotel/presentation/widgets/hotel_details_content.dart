@@ -5,6 +5,7 @@ import 'package:hotelspot/features/hotel/domain/entities/hotel_entity.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/widgets/hotel_amenity_chip.dart';
 import 'package:hotelspot/features/hotel/presentation/widgets/hotel_info_card.dart';
+import 'package:hotelspot/features/hotel/presentation/widgets/hotel_review_section.dart';
 import 'package:latlong2/latlong.dart';
 
 class HotelDetailsContent extends StatelessWidget {
@@ -13,6 +14,7 @@ class HotelDetailsContent extends StatelessWidget {
   final int currentImageIndex;
   final ValueChanged<int> onImagePageChanged;
   final VoidCallback onToggleFavourite;
+  final String hotelId; // ADD
 
   const HotelDetailsContent({
     super.key,
@@ -21,6 +23,7 @@ class HotelDetailsContent extends StatelessWidget {
     required this.currentImageIndex,
     required this.onImagePageChanged,
     required this.onToggleFavourite,
+    required this.hotelId, // ADD
   });
 
   @override
@@ -219,6 +222,7 @@ class HotelDetailsContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Hotel name + price
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,6 +276,8 @@ class HotelDetailsContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // Info cards
                   Row(
                     children: [
                       Expanded(
@@ -302,6 +308,8 @@ class HotelDetailsContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
+
+                  // Amenities
                   const Text(
                     'Amenities',
                     style: TextStyle(
@@ -333,6 +341,8 @@ class HotelDetailsContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
+
+                  // Location
                   const Text(
                     'Location',
                     style: TextStyle(
@@ -343,6 +353,13 @@ class HotelDetailsContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _buildMap(hotel),
+                  const SizedBox(height: 32),
+
+                  // ⭐ Reviews section
+                  const Divider(color: Colors.white12, height: 1),
+                  const SizedBox(height: 24),
+                  HotelReviewSection(hotelId: hotelId),
+
                   const SizedBox(height: 100),
                 ],
               ),

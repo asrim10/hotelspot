@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hotelspot/features/booking/domain/entities/booking_entity.dart';
 import 'package:hotelspot/features/booking/presentation/widgets/booking_mini_date_col.dart';
+import 'package:hotelspot/features/booking/presentation/widgets/review_button.dart';
 
 class BookingCard extends StatelessWidget {
   final BookingEntity booking;
   final String? imageUrl;
+  final String? hotelName;
   final VoidCallback onTap;
 
   const BookingCard({
@@ -12,6 +14,7 @@ class BookingCard extends StatelessWidget {
     required this.booking,
     required this.onTap,
     this.imageUrl,
+    this.hotelName,
   });
 
   Color get _statusColor {
@@ -39,6 +42,10 @@ class BookingCard extends StatelessWidget {
         return booking.status[0].toUpperCase() + booking.status.substring(1);
     }
   }
+
+  bool get _canReview =>
+      booking.status.toLowerCase() == 'confirmed' ||
+      booking.status.toLowerCase() == 'checked_out';
 
   String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
@@ -123,7 +130,7 @@ class BookingCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                booking.fullName,
+                                hotelName ?? booking.fullName,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 15,
@@ -244,6 +251,18 @@ class BookingCard extends StatelessWidget {
                             ),
                           ],
                         ],
+                      ),
+                    ],
+
+                    //  Rate Your Stay button
+                    if (_canReview) ...[
+                      const SizedBox(height: 14),
+                      Divider(color: Colors.white.withOpacity(0.07), height: 1),
+                      const SizedBox(height: 12),
+                      ReviewButton(
+                        hotelId: booking.hotelId,
+                        hotelName: hotelName ?? booking.fullName,
+                        imageUrl: imageUrl,
                       ),
                     ],
                   ],

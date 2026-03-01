@@ -7,6 +7,7 @@ import 'package:hotelspot/features/auth/presentation/pages/login_screen.dart';
 import 'package:hotelspot/features/auth/presentation/state/auth_state.dart';
 import 'package:hotelspot/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:hotelspot/features/booking/presentation/pages/booking_history_page.dart';
+import 'package:hotelspot/features/reviews/presentation/pages/my_review_page.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -71,6 +72,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   const SizedBox(height: 12),
 
+                  // Avatar
                   Container(
                     width: 90,
                     height: 90,
@@ -127,14 +129,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                   const SizedBox(height: 32),
 
+                  // Account menu
                   _MenuCard(
                     children: [
                       _MenuItem(
                         icon: Icons.edit_outlined,
                         label: 'Edit Profile',
                         onTap: () async {
-                          // No getProfile() after returning — viewmodel
-                          // already holds the updated state with bumped imageVersion
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -153,11 +154,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                       ),
+                      _MenuItem(
+                        icon: Icons.rate_review_outlined,
+                        label: 'My Reviews',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MyReviewsPage(),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
 
                   const SizedBox(height: 16),
 
+                  // Logout
                   _MenuCard(
                     children: [
                       _MenuItem(
@@ -280,7 +292,11 @@ class _MenuItem extends StatelessWidget {
         label,
         style: TextStyle(color: c, fontSize: 14, fontWeight: FontWeight.w500),
       ),
-      trailing: Icon(Icons.arrow_forward_ios, color: Colors.white24, size: 14),
+      trailing: const Icon(
+        Icons.arrow_forward_ios,
+        color: Colors.white24,
+        size: 14,
+      ),
     );
   }
 }
