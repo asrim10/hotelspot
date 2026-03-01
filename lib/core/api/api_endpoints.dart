@@ -69,4 +69,13 @@ class ApiEndpoints {
   static const String payments = '/payment';
   static const String initiateKhaltiPayment = '/payment/khalti/initiate';
   static const String verifyKhaltiPayment = '/payment/khalti/verify';
+
+  // Review endpoints
+  static const String reviews = '/review';
+  static String createReview() => '/review';
+  static String reviewById(String id) => '/review/$id';
+  static String reviewsByHotelId(String hotelId) => '/review/hotel/$hotelId';
+  static const String myReviews = '/review/me';
+  static String updateReview(String id) => '/review/$id';
+  static String deleteReview(String id) => '/review/$id';
 }

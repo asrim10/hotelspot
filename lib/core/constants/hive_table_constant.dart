@@ -16,4 +16,7 @@ class HiveTableConstant {
 
   static const int favouriteId = 3;
   static const String favouriteTable = 'favourite_table';
+
+  static const int reviewId = 4;
+  static const String reviewTable = 'review_table';
 }

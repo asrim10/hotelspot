@@ -5,6 +5,7 @@ import 'package:hotelspot/features/auth/data/models/auth_hive_model.dart';
 import 'package:hotelspot/features/booking/data/models/booking_hive_model.dart';
 import 'package:hotelspot/features/favourites/data/models/favourite_hive_model.dart';
 import 'package:hotelspot/features/hotel/data/models/hotel_hive_model.dart';
+import 'package:hotelspot/features/reviews/data/models/review_hive_model.dart';
 import 'package:path_provider/path_provider.dart';
 
 final hiveServiceProvider = Provider<HiveService>((ref) {
@@ -18,7 +19,6 @@ class HiveService {
     Hive.init(path);
     _registerAdapter();
     await _openBoxes();
-    // Clean up any corrupted string-keyed booking entries from old bug
     await _cleanCorruptedBookingKeys();
   }
 
@@ -35,6 +35,9 @@ class HiveService {
     if (!Hive.isAdapterRegistered(HiveTableConstant.favouriteId)) {
       Hive.registerAdapter(FavouriteHiveModelAdapter());
     }
+    if (!Hive.isAdapterRegistered(HiveTableConstant.reviewId)) {
+      Hive.registerAdapter(ReviewHiveModelAdapter());
+    }
   }
 
   Future<void> _openBoxes() async {
@@ -42,6 +45,7 @@ class HiveService {
     await Hive.openBox<BookingHiveModel>(HiveTableConstant.bookingTable);
     await Hive.openBox<FavouriteHiveModel>(HiveTableConstant.favouriteTable);
     await Hive.openBox<HotelHiveModel>(HiveTableConstant.hotelTable);
+    await Hive.openBox<ReviewHiveModel>(HiveTableConstant.reviewTable);
   }
 
   Future<void> close() async {
@@ -78,7 +82,6 @@ class HiveService {
   Box<BookingHiveModel> get _bookingBox =>
       Hive.box<BookingHiveModel>(HiveTableConstant.bookingTable);
 
-  // Deletes any entries that were stored with a string key (old bug remnants)
   Future<void> _cleanCorruptedBookingKeys() async {
     final badKeys = _bookingBox.keys.where((k) => k is! int).toList();
     if (badKeys.isNotEmpty) {
@@ -88,11 +91,9 @@ class HiveService {
 
   int? _getHiveKey(String bookingId) {
     for (final key in _bookingBox.keys) {
-      if (key is! int) continue; // skip any corrupted non-int key
+      if (key is! int) continue;
       final entry = _bookingBox.get(key);
-      if (entry != null && entry.bookingId == bookingId) {
-        return key;
-      }
+      if (entry != null && entry.bookingId == bookingId) return key;
     }
     return null;
   }
@@ -101,14 +102,11 @@ class HiveService {
     for (final key in _bookingBox.keys) {
       if (key is! int) continue;
       final entry = _bookingBox.get(key);
-      if (entry != null && entry.bookingId == bookingId) {
-        return entry;
-      }
+      if (entry != null && entry.bookingId == bookingId) return entry;
     }
     return null;
   }
 
-  // Create Booking
   Future<BookingHiveModel> createBooking(BookingHiveModel booking) async {
     final existingKey = _getHiveKey(booking.bookingId);
     if (existingKey != null) {
@@ -119,7 +117,6 @@ class HiveService {
     return booking;
   }
 
-  // Get My Bookings by userId
   Future<List<BookingHiveModel>> getMyBookings(String userId) async {
     final bookings = _bookingBox.values
         .where((b) => b.userId == userId)
@@ -131,17 +128,12 @@ class HiveService {
     return bookings;
   }
 
-  // Get All Bookings
-  Future<List<BookingHiveModel>> getAllBookings() async {
-    return _bookingBox.values.toList();
-  }
+  Future<List<BookingHiveModel>> getAllBookings() async =>
+      _bookingBox.values.toList();
 
-  // Get Booking by bookingId field value
-  BookingHiveModel? getBookingById(String bookingId) {
-    return _findByBookingId(bookingId);
-  }
+  BookingHiveModel? getBookingById(String bookingId) =>
+      _findByBookingId(bookingId);
 
-  // Update Booking
   Future<BookingHiveModel> updateBooking(BookingHiveModel booking) async {
     final updated = booking.copyWith(updatedAt: DateTime.now());
     final key = _getHiveKey(booking.bookingId);
@@ -153,7 +145,6 @@ class HiveService {
     return updated;
   }
 
-  // Cancel Booking
   Future<BookingHiveModel?> cancelBooking(String bookingId) async {
     final key = _getHiveKey(bookingId);
     final booking = _findByBookingId(bookingId);
@@ -165,11 +156,9 @@ class HiveService {
       await _bookingBox.put(key, cancelled);
       return cancelled;
     }
-    // Not cached locally — API already cancelled it, that is fine
     return null;
   }
 
-  // Update Payment Status
   Future<BookingHiveModel?> updatePaymentStatus(
     String bookingId,
     String paymentStatus,
@@ -187,7 +176,6 @@ class HiveService {
     return null;
   }
 
-  // Update Payment Method
   Future<BookingHiveModel?> updatePaymentMethod(
     String bookingId,
     String paymentMethod,
@@ -205,7 +193,6 @@ class HiveService {
     return null;
   }
 
-  // Update Booking Status
   Future<BookingHiveModel?> updateBookingStatus(
     String bookingId,
     String status,
@@ -223,7 +210,6 @@ class HiveService {
     return null;
   }
 
-  // Delete Booking
   Future<bool> deleteBooking(String bookingId) async {
     final key = _getHiveKey(bookingId);
     if (key != null) {
@@ -233,30 +219,19 @@ class HiveService {
     return false;
   }
 
-  // Get Bookings by Hotel ID
-  Future<List<BookingHiveModel>> getBookingsByHotelId(String hotelId) async {
-    return _bookingBox.values.where((b) => b.hotelId == hotelId).toList();
-  }
+  Future<List<BookingHiveModel>> getBookingsByHotelId(String hotelId) async =>
+      _bookingBox.values.where((b) => b.hotelId == hotelId).toList();
 
-  // Get Bookings by Status
   Future<List<BookingHiveModel>> getBookingsByStatus(
     String userId,
     String status,
-  ) async {
-    return _bookingBox.values
-        .where((b) => b.userId == userId && b.status == status)
-        .toList();
-  }
+  ) async => _bookingBox.values
+      .where((b) => b.userId == userId && b.status == status)
+      .toList();
 
-  // Booking Exists
-  bool bookingExists(String bookingId) {
-    return _findByBookingId(bookingId) != null;
-  }
+  bool bookingExists(String bookingId) => _findByBookingId(bookingId) != null;
 
-  // Clear All Bookings
-  Future<void> clearAllBookings() async {
-    await _bookingBox.clear();
-  }
+  Future<void> clearAllBookings() async => _bookingBox.clear();
 
   // ======================= Favourite CRUD ===============================
 
@@ -301,31 +276,24 @@ class HiveService {
     }
   }
 
-  bool isHotelFavourited(String userId, String hotelId) {
-    return _favouriteBox.values.any(
-      (fav) => fav.userId == userId && fav.hotelId == hotelId,
-    );
-  }
+  bool isHotelFavourited(String userId, String hotelId) => _favouriteBox.values
+      .any((fav) => fav.userId == userId && fav.hotelId == hotelId);
 
   // ======================= Hotel CRUD ===============================
 
   Box<HotelHiveModel> get _hotelBox =>
       Hive.box<HotelHiveModel>(HiveTableConstant.hotelTable);
 
-  /// Cache all hotels (bulk replace — called after a successful API fetch)
   Future<void> cacheHotels(List<HotelHiveModel> hotels) async {
     await _hotelBox.clear();
     final map = {for (final h in hotels) h.hotelId: h};
     await _hotelBox.putAll(map);
   }
 
-  Future<List<HotelHiveModel>> getAllHotels() async {
-    return _hotelBox.values.toList();
-  }
+  Future<List<HotelHiveModel>> getAllHotels() async =>
+      _hotelBox.values.toList();
 
-  HotelHiveModel? getHotelById(String hotelId) {
-    return _hotelBox.get(hotelId);
-  }
+  HotelHiveModel? getHotelById(String hotelId) => _hotelBox.get(hotelId);
 
   Future<HotelHiveModel> saveHotel(HotelHiveModel hotel) async {
     await _hotelBox.put(hotel.hotelId, hotel);
@@ -343,4 +311,84 @@ class HiveService {
   bool hotelExists(String hotelId) => _hotelBox.containsKey(hotelId);
 
   Future<void> clearAllHotels() async => _hotelBox.clear();
+
+  // ======================= Review CRUD ===============================
+
+  Box<ReviewHiveModel> get _reviewBox =>
+      Hive.box<ReviewHiveModel>(HiveTableConstant.reviewTable);
+
+  Future<void> cacheReviewsByHotelId(
+    String hotelId,
+    List<ReviewHiveModel> reviews,
+  ) async {
+    final oldKeys = _reviewBox.keys
+        .where((k) => _reviewBox.get(k)?.hotelId == hotelId)
+        .toList();
+    await _reviewBox.deleteAll(oldKeys);
+
+    final map = {for (final r in reviews) r.reviewId: r};
+    await _reviewBox.putAll(map);
+  }
+
+  Future<List<ReviewHiveModel>> getReviewsByHotelId(String hotelId) async {
+    final reviews = _reviewBox.values
+        .where((r) => r.hotelId == hotelId)
+        .toList();
+    reviews.sort(
+      (a, b) =>
+          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)),
+    );
+    return reviews;
+  }
+
+  Future<List<ReviewHiveModel>> getMyReviews(String userId) async {
+    final reviews = _reviewBox.values.where((r) => r.userId == userId).toList();
+    reviews.sort(
+      (a, b) =>
+          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)),
+    );
+    return reviews;
+  }
+
+  ReviewHiveModel? getReviewById(String reviewId) => _reviewBox.get(reviewId);
+
+  Future<ReviewHiveModel> saveReview(ReviewHiveModel review) async {
+    await _reviewBox.put(review.reviewId, review);
+    return review;
+  }
+
+  Future<ReviewHiveModel> updateReview(ReviewHiveModel review) async {
+    final updated = ReviewHiveModel(
+      reviewId: review.reviewId,
+      userId: review.userId,
+      hotelId: review.hotelId,
+      fullName: review.fullName,
+      email: review.email,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    await _reviewBox.put(updated.reviewId, updated);
+    return updated;
+  }
+
+  Future<bool> deleteReview(String reviewId) async {
+    if (_reviewBox.containsKey(reviewId)) {
+      await _reviewBox.delete(reviewId);
+      return true;
+    }
+    return false;
+  }
+
+  bool reviewExists(String reviewId) => _reviewBox.containsKey(reviewId);
+
+  Future<void> clearReviewsByHotelId(String hotelId) async {
+    final keys = _reviewBox.keys
+        .where((k) => _reviewBox.get(k)?.hotelId == hotelId)
+        .toList();
+    await _reviewBox.deleteAll(keys);
+  }
+
+  Future<void> clearAllReviews() async => _reviewBox.clear();
 }
