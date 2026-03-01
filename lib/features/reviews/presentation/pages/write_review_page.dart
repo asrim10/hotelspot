@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:hotelspot/features/reviews/presentation/pages/my_review_page.dart';
 import 'package:hotelspot/features/reviews/presentation/state/review_state.dart';
 import 'package:hotelspot/features/reviews/presentation/view_model/review_viewmodel.dart';
@@ -62,6 +63,7 @@ class _WriteReviewPageState extends ConsumerState<WriteReviewPage> {
     ref.listen<ReviewState>(reviewViewmodelProvider, (previous, next) {
       if (next.status == ReviewStatus.created &&
           previous?.status != ReviewStatus.created) {
+        ref.read(hotelViewmodelProvider.notifier).getHotelById(widget.hotelId);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Review submitted! Thank you.'),

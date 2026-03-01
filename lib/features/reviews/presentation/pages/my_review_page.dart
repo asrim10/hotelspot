@@ -97,6 +97,7 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
     if (!mounted) return;
     final state = ref.read(reviewViewmodelProvider);
     if (state.status == ReviewStatus.deleted) {
+      ref.read(hotelViewmodelProvider.notifier).getHotelById(review.hotelId);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Review deleted'),

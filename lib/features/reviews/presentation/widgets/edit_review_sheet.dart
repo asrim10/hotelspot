@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
 import 'package:hotelspot/features/reviews/domain/entities/review_entity.dart';
 import 'package:hotelspot/features/reviews/presentation/state/review_state.dart';
 import 'package:hotelspot/features/reviews/presentation/view_model/review_viewmodel.dart';
@@ -66,6 +67,9 @@ class _EditReviewSheetState extends ConsumerState<EditReviewSheet> {
     ref.listen<ReviewState>(reviewViewmodelProvider, (previous, next) {
       if (next.status == ReviewStatus.updated &&
           previous?.status != ReviewStatus.updated) {
+        ref
+            .read(hotelViewmodelProvider.notifier)
+            .getHotelById(widget.review.hotelId);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
