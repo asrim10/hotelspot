@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/features/favourites/domain/entities/favourite_entity.dart';
 import 'package:hotelspot/features/favourites/domain/usecases/add_to_favourite_usecase.dart';
 import 'package:hotelspot/features/favourites/domain/usecases/get_my_favourite_usecase.dart';
-import 'package:hotelspot/features/favourites/domain/usecases/remove_favourtie_usecase.dart';
+import 'package:hotelspot/features/favourites/domain/usecases/remove_favourite_usecase.dart';
 import 'package:hotelspot/features/favourites/presentation/state/favourite_state.dart';
 
 final favouriteViewModelProvider =

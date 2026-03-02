@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/features/reviews/domain/usecases/create_review_usecase.dart';
 import 'package:hotelspot/features/reviews/domain/usecases/delete_review_usecase.dart';
-import 'package:hotelspot/features/reviews/domain/usecases/ger_review_by_id_usecase.dart';
+import 'package:hotelspot/features/reviews/domain/usecases/get_review_by_id_usecase.dart';
 import 'package:hotelspot/features/reviews/domain/usecases/get_my_reviews_usecase.dart';
 import 'package:hotelspot/features/reviews/domain/usecases/get_reviews_by_hotel_id_usecase.dart';
 import 'package:hotelspot/features/reviews/domain/usecases/update_review_usecase.dart';
