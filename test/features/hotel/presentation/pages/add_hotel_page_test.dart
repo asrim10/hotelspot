@@ -1,134 +1,136 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
 import 'package:hotelspot/features/hotel/presentation/pages/add_hotel_page.dart';
 import 'package:hotelspot/features/hotel/presentation/state/hotel_state.dart';
 import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel.dart';
-import 'package:mocktail/mocktail.dart';
 
-// --- Mock class for the ViewModel notifier ---
-class MockHotelViewmodel extends Mock implements HotelViewmodel {
-  // Add any methods you need to stub here
+class MockHotelViewModel extends HotelViewmodel with Mock {
+  @override
+  HotelState build() => const HotelState(status: HotelStatus.initial);
+
+  @override
+  Future<void> createHotel({
+    required String hotelName,
+    required String address,
+    required String city,
+    required String country,
+    required double rating,
+    String? description,
+    required double price,
+    required int availableRooms,
+    String? imageUrl,
+  }) async {}
+
+  @override
+  Future<void> getAllHotels() async {}
 }
 
-// --- Helper: pumps AddHotelPage inside ProviderScope with overrides ---
-Future<void> pumpAddHotelPage(WidgetTester tester, {HotelState? state}) async {
-  // Default state: idle, no error
-  final hotelState =
-      state ??
-      HotelState(
-        status: HotelStatus.initial,
-        errorMessage: null,
-        uploadImageName: null,
-      );
-
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        // Override the provider so it returns our fake state
-        // and does NOT call the real network/backend
-        hotelViewmodelProvider.overrideWith(() {
-          final mock = MockHotelViewmodel();
-          when(() => mock.state).thenReturn(hotelState);
-          return mock;
-        }),
-      ],
-      child: MaterialApp(home: AddHotelPage()),
-    ),
+Widget buildWidget({HotelViewmodel? notifier}) {
+  return ProviderScope(
+    overrides: [
+      hotelViewmodelProvider.overrideWith(
+        () => notifier ?? MockHotelViewModel(),
+      ),
+    ],
+    child: const MaterialApp(home: AddHotelPage()),
   );
-  await tester.pumpAndSettle();
+}
+
+Future<void> tapSave(WidgetTester tester) async {
+  final btn = find.widgetWithText(ElevatedButton, 'Add Hotel');
+  await tester.ensureVisible(btn);
+  await tester.tap(btn);
+  await tester.pump();
 }
 
 void main() {
-  // ---------------------------------------------------------------
-  // Test 1: Page renders the AppBar title "Add Hotel"
-  // ---------------------------------------------------------------
-  testWidgets('Should display "Add Hotel" title in AppBar', (tester) async {
-    await pumpAddHotelPage(tester);
+  group('rendering', () {
+    testWidgets('shows app bar title', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      expect(find.text('Add Hotel'), findsWidgets);
+    });
 
-    // "Add Hotel" appears twice — AppBar title and bottom ElevatedButton
-    // So we scope the search inside AppBar only
-    Finder title = find.descendant(
-      of: find.byType(AppBar),
-      matching: find.text('Add Hotel'),
-    );
-    expect(title, findsOneWidget);
+    testWidgets('shows all section titles', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      expect(find.text('Basic Information'), findsOneWidget);
+      expect(find.text('Location'), findsOneWidget);
+      expect(find.text('Pricing & Availability'), findsOneWidget);
+    });
+
+    testWidgets('shows add image button', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      expect(find.text('Add Image'), findsOneWidget);
+    });
+
+    testWidgets('shows save button in app bar', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      expect(find.widgetWithText(TextButton, 'Save'), findsOneWidget);
+    });
   });
 
-  // ---------------------------------------------------------------
-  // Test 2: All section headers are rendered
-  // ---------------------------------------------------------------
-  testWidgets('Should display all section headers', (tester) async {
-    await pumpAddHotelPage(tester);
-
-    // These are the section titles built by _buildSection()
-    expect(find.text('Hotel Images'), findsOneWidget);
-    expect(find.text('Basic Information'), findsOneWidget);
-    expect(find.text('Location'), findsOneWidget);
-    expect(find.text('Pricing & Availability'), findsOneWidget);
-  });
-
-  // ---------------------------------------------------------------
-  // Test 3: Form validation — required fields show errors on empty submit
-  // ---------------------------------------------------------------
-  testWidgets(
-    'Should show validation errors when Save is tapped with empty fields',
-    (tester) async {
-      await pumpAddHotelPage(tester);
-
-      // Tap the "Save" TextButton in the AppBar
-      await tester.tap(find.widgetWithText(TextButton, 'Save'));
-      await tester.pumpAndSettle();
-
-      // These validation messages come from the validators in the code
+  group('validation', () {
+    testWidgets('shows errors on empty submit', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tapSave(tester);
       expect(find.text('Please enter hotel name'), findsOneWidget);
       expect(find.text('Please enter address'), findsOneWidget);
-      // City and Country use 'Required' as their error
+    });
+
+    testWidgets('shows error for short hotel name', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tester.enterText(find.byType(TextFormField).at(0), 'A');
+      await tapSave(tester);
       expect(
-        find.text('Required'),
-        findsWidgets,
-      ); // Price + Rooms + City + Country
-    },
-  );
+        find.text('Hotel name must be at least 2 characters'),
+        findsOneWidget,
+      );
+    });
 
-  // Test 4: Typing into Hotel Name field works and clears the error
-  testWidgets('Should clear Hotel Name validation error after entering text', (
-    tester,
-  ) async {
-    await pumpAddHotelPage(tester);
+    testWidgets('shows error for short address', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tester.enterText(find.byType(TextFormField).at(2), 'abc');
+      await tapSave(tester);
+      expect(
+        find.text('Address must be at least 5 characters'),
+        findsOneWidget,
+      );
+    });
 
-    // First trigger validation by tapping Save
-    await tester.tap(find.widgetWithText(TextButton, 'Save'));
-    await tester.pumpAndSettle();
-    expect(find.text('Please enter hotel name'), findsOneWidget);
+    testWidgets('shows required errors for city and country', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tapSave(tester);
+      expect(find.text('Required'), findsWidgets);
+    });
 
-    // Type a valid hotel name (>= 2 chars)
-    // Hotel Name is the FIRST TextFormField on the page
-    await tester.enterText(find.byType(TextFormField).first, 'Grand Plaza');
-    await tester.pumpAndSettle();
-
-    // enterText alone does NOT re-run the validator automatically.
-    // Tap Save again to trigger form.validate() which re-checks all fields.
-    await tester.tap(find.widgetWithText(TextButton, 'Save'));
-    await tester.pumpAndSettle();
-
-    // Hotel name error should now be gone (field is valid)
-    // Other errors will still show since those fields are empty — that's expected
-    expect(find.text('Please enter hotel name'), findsNothing);
+    testWidgets('shows snackbar when no image is uploaded', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tester.enterText(find.byType(TextFormField).at(0), 'Grand Hotel');
+      await tester.enterText(
+        find.byType(TextFormField).at(2),
+        '123 Main Street',
+      );
+      await tester.enterText(find.byType(TextFormField).at(3), 'Kathmandu');
+      await tester.enterText(find.byType(TextFormField).at(4), 'Nepal');
+      await tester.enterText(find.byType(TextFormField).at(5), '2000');
+      await tester.enterText(find.byType(TextFormField).at(6), '5');
+      await tapSave(tester);
+      await tester.pumpAndSettle();
+      expect(find.text('Please select and upload an image'), findsOneWidget);
+    });
   });
 
-  // ---------------------------------------------------------------
-  // Test 5: "Add Image" button and the bottom Save ElevatedButton exist
-  // ---------------------------------------------------------------
-  testWidgets('Should render Add Image area and the bottom Add Hotel button', (
-    tester,
-  ) async {
-    await pumpAddHotelPage(tester);
+  group('rating slider', () {
+    testWidgets('shows rating slider', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      expect(find.byType(Slider), findsOneWidget);
+    });
 
-    // The "Add Image" text inside the image picker placeholder
-    expect(find.text('Add Image'), findsOneWidget);
-
-    // The bottom ElevatedButton says "Add Hotel" (not uploading state)
-    expect(find.widgetWithText(ElevatedButton, 'Add Hotel'), findsOneWidget);
+    testWidgets('shows no rating text by default', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      expect(find.text('No rating'), findsOneWidget);
+    });
   });
 }

@@ -11,14 +11,14 @@ import 'package:hotelspot/features/hotel/presentation/view_model/hotel_viewmodel
 import 'package:hotelspot/features/hotel/presentation/pages/all_hotels_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+class HomePage extends ConsumerStatefulWidget {
+  const HomePage({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomePage> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomePage> {
   String? _currentUserId;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';

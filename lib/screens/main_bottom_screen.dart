@@ -16,7 +16,7 @@ class _MainBottomScreenState extends State<MainBottomScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeScreen(),
+    const HomePage(),
     const FavouritesPage(),
     const BookingHistoryPage(),
     const ProfilePage(),

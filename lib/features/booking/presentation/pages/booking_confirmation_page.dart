@@ -140,7 +140,7 @@ class BookingConfirmationPage extends StatelessWidget {
                   ),
                   child: const Center(
                     child: Text(
-                      'CONTINUE SHOPPING',
+                      'CONTINUE EXPLORING',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
