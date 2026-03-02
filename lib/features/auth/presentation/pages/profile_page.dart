@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/api/api_endpoints.dart';
 import 'package:hotelspot/core/services/storage/token_service.dart';
 import 'package:hotelspot/features/auth/presentation/pages/edit_profile_page.dart';
-import 'package:hotelspot/features/auth/presentation/pages/login_screen.dart';
+import 'package:hotelspot/features/auth/presentation/pages/login_page.dart';
 import 'package:hotelspot/features/auth/presentation/state/auth_state.dart';
 import 'package:hotelspot/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:hotelspot/features/booking/presentation/pages/booking_history_page.dart';

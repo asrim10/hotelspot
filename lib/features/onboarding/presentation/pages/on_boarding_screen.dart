@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hotelspot/features/auth/presentation/pages/login_screen.dart';
+import 'package:hotelspot/features/auth/presentation/pages/login_page.dart';
 
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({super.key});

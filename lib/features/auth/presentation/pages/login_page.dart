@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hotelspot/core/utils/snackbar_utils.dart';
-import 'package:hotelspot/features/auth/presentation/pages/register_screen.dart';
+import 'package:hotelspot/features/auth/presentation/pages/register_page.dart';
 import 'package:hotelspot/features/auth/presentation/state/auth_state.dart';
 import 'package:hotelspot/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:hotelspot/screens/main_bottom_screen.dart';
