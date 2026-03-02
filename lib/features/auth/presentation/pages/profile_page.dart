@@ -9,14 +9,14 @@ import 'package:hotelspot/features/auth/presentation/view_model/auth_viewmodel.d
 import 'package:hotelspot/features/booking/presentation/pages/booking_history_page.dart';
 import 'package:hotelspot/features/reviews/presentation/pages/my_review_page.dart';
 
-class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key});
+class ProfilePage extends ConsumerStatefulWidget {
+  const ProfilePage({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfilePage> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfilePage> {
   @override
   void initState() {
     super.initState();
@@ -216,7 +216,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               await ref.read(tokenServiceProvider).removeToken();
               if (context.mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
                   (route) => false,
                 );
               }

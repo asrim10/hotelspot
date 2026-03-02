@@ -19,7 +19,7 @@ class _MainBottomScreenState extends State<MainBottomScreen> {
     const HomeScreen(),
     const FavouritesPage(),
     const BookingHistoryPage(),
-    const ProfileScreen(),
+    const ProfilePage(),
   ];
 
   void _onTabTapped(int index) {

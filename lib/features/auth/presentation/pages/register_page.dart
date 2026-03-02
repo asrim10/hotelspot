@@ -6,14 +6,14 @@ import 'package:hotelspot/features/auth/presentation/pages/login_page.dart';
 import 'package:hotelspot/features/auth/presentation/state/auth_state.dart';
 import 'package:hotelspot/features/auth/presentation/view_model/auth_viewmodel.dart';
 
-class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
+class RegisterPage extends ConsumerStatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterPage> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -59,9 +59,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       } else if (next.status == AuthStatus.registered) {
         SnackbarUtils.showSuccess(context, "Registration Successful");
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
       }
     });
 
@@ -351,7 +351,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ..onTap = () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => const LoginScreen(),
+                                    builder: (context) => const LoginPage(),
                                   ),
                                 );
                               },
