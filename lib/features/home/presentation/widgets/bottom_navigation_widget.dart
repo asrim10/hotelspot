@@ -17,16 +17,16 @@ class BottomNavigationWidget extends StatefulWidget {
 }
 
 class _BottomNavigationWidgetState extends State<BottomNavigationWidget> {
-  // Convert screen index to navigation bar index
+  int _rebuildKey = 0;
+
   int _getNavBarIndex(int screenIndex) {
-    // screens: [Home(0), Favorites(1), Map(2), Profile(3)]
-    // navbar:  [Home(0), Fav(1), Add(2), Map(3), Profile(4)]
     return screenIndex >= 2 ? screenIndex + 1 : screenIndex;
   }
 
   @override
   Widget build(BuildContext context) {
     return CurvedNavigationBar(
+      key: ValueKey(_rebuildKey),
       index: _getNavBarIndex(widget.currentIndex),
       backgroundColor: Colors.transparent,
       color: Theme.of(context).primaryColor,
@@ -44,7 +44,10 @@ class _BottomNavigationWidgetState extends State<BottomNavigationWidget> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddHotelPage()),
-          );
+          ).then((_) {
+            widget.onTap(0);
+            setState(() => _rebuildKey++);
+          });
           return;
         }
         int screenIndex = navBarIndex > 2 ? navBarIndex - 1 : navBarIndex;
