@@ -103,7 +103,7 @@ class _HomeScreenState extends ConsumerState<HomePage> {
     final isFiltering = _searchQuery.isNotEmpty || _filterOptions.isActive;
 
     return Scaffold(
-      backgroundColor: HomeAppColors.primary,
+      backgroundColor: const Color(0xFF0A0E21),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -111,7 +111,7 @@ class _HomeScreenState extends ConsumerState<HomePage> {
               // Top header
               Container(
                 width: double.infinity,
-                decoration: const BoxDecoration(color: HomeAppColors.primary),
+                decoration: const BoxDecoration(color: Color(0xFF0A0E21)),
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ class _HomeScreenState extends ConsumerState<HomePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: HomeAppColors.cardPurple,
+                    color: Color(0xFF0A0E21),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),

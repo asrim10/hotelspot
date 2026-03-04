@@ -19,8 +19,8 @@ class FavouritesPage extends ConsumerStatefulWidget {
 }
 
 class _FavouritesPageState extends ConsumerState<FavouritesPage> {
-  static const Color topLeft = Color(0xFF6C5CC4);
-  static const Color cardPurple = Color(0xFF485D88);
+  static const Color topLeft = Color(0xFF0A0E21);
+  static const Color cardPurple = Color(0xFF0A0E21);
   static const Color priceBlue = Color(0xFF1E90FF);
 
   @override
