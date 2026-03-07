@@ -207,7 +207,7 @@ class HotelCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'NRs.${hotel.price.toStringAsFixed(0)}k',
+                          'NRs.${hotel.price.toStringAsFixed(0)}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
